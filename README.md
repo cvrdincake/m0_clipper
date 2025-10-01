@@ -120,9 +120,115 @@ See `PROJECT_IMPROVEMENTS.md` for a detailed roadmap.
 
 ## ⚠️ Troubleshooting
 
+### General Issues
 - **FFmpeg not found:** Ensure FFmpeg is installed and its location is in your system's PATH environment variable. You can test this by typing `ffmpeg -version` in your terminal.
 - **No highlights found:** Your threshold might be too high. Use the "Analyze Reference" feature to get a better baseline, then try a more "Aggressive" setting.
 - **GUI won't start:** Ensure you have `tkinter` available in your Python installation. You may also need to install `tkinterdnd2` separately (`pip install tkinterdnd2`).
+
+### Windows-Specific Setup
+
+#### Quick Fix for tkinterdnd2 Error
+If you're getting a `tkinterdnd2` import error:
+```cmd
+pip install tkinterdnd2
+```
+
+#### Complete Windows Installation
+1. **Install Dependencies:**
+   ```cmd
+   pip install ffmpeg-python librosa loguru numpy rich scikit-learn typer tkinterdnd2
+   ```
+
+2. **Install FFmpeg:**
+   - Download from: https://ffmpeg.org/download.html#build-windows
+   - Extract to `C:\ffmpeg`
+   - Add `C:\ffmpeg\bin` to your Windows PATH
+   - **Or use Chocolatey:** `choco install ffmpeg`
+
+3. **Verify Installation:**
+   ```cmd
+   ffmpeg -version
+   python -c "import tkinterdnd2; print('tkinterdnd2 works!')"
+   ```
+
+#### Windows Troubleshooting
+- **"module 'ffmpeg' has no attribute 'input'"**: Run `pip uninstall ffmpeg-python && pip install ffmpeg-python`
+- **"FFmpeg not found"**: Restart Command Prompt after adding FFmpeg to PATH
+- **Module not found errors**: Try `python -m pip install [package_name]`
+- **Performance**: Close other programs, use SSD storage, keep videos on local drives
+
+---
+
+## 🎨 Glassmorphism UI System
+
+M0 Clipper features an ultra-modern glassmorphism interface with sophisticated black/white aesthetics and advanced visual effects.
+
+### Key Features
+- **Professional Glass Effects**: Translucent panels with blur effects
+- **Modern Typography**: Clean Inter font hierarchy
+- **Smooth Animations**: Mathematical easing functions for fluid transitions
+- **Platform Integration**: Native window effects (Windows Acrylic, macOS Vibrancy)
+- **Cyber Enhancements**: Optional holographic scanlines and particle effects
+
+### Color System
+The UI uses a sophisticated grayscale palette:
+- **Backgrounds**: Pure black (#000000) to medium black (#2A2A2A)
+- **Glass Panels**: Semi-transparent overlays with blur effects
+- **Text**: Pure white (#FFFFFF) to muted white (#D0D0D0) for hierarchy
+- **Accents**: Status colors for success, warning, and error states
+
+### Development Integration
+```python
+from highlighter.glassmorphism import GlassmorphismTheme, GlassPanel, GlassButton
+
+# Initialize theme
+theme = GlassmorphismTheme()
+
+# Create glass components
+panel = GlassPanel(parent, theme, "Panel Title")
+button = GlassButton(parent, theme, "Action", command, "primary")
+```
+
+For complete glassmorphism documentation and API reference, see the `highlighter/glassmorphism.py` module.
+
+---
+
+## 🏗️ Building Executable
+
+To create a standalone executable (.exe) for Windows:
+
+### Prerequisites
+1. **Windows 10/11** (64-bit)
+2. **Python 3.10+** with standard library
+3. **All dependencies installed**: `pip install -r requirements-build.txt`
+4. **FFmpeg** in system PATH
+
+### Quick Build
+1. **Clone and setup:**
+   ```cmd
+   git clone https://github.com/cvrdincake/m0_clipper.git
+   cd m0_clipper
+   pip install -r requirements-build.txt
+   ```
+
+2. **Build executable:**
+   ```cmd
+   build_exe.bat
+   ```
+   Or manually:
+   ```cmd
+   python -m PyInstaller m0_clipper.spec --clean
+   ```
+
+3. **Find your executable:**
+   - Single file: `dist/M0_Clipper.exe`
+   - Portable folder: `dist/M0_Clipper_Portable/`
+
+### Distribution Notes
+- The executable is **~100MB** and includes all Python dependencies
+- **FFmpeg must still be installed** on target systems
+- Test on a clean Windows system before distributing
+- The portable version includes a README for end users
 
 ---
 

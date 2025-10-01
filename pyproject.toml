@@ -1,10 +1,100 @@
+# Development Configuration for M0 Clipper
+# This file configures development tools and quality standards
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.mypy_cache
+  | \.pytest_cache
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false  # Gradual adoption
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "librosa.*",
+    "tkinterdnd2.*",
+    "rich.*",
+    "loguru.*",
+    "ffmpeg.*",
+    "soundfile.*"
+]
+ignore_missing_imports = true
+
+[tool.pylint.master]
+load-plugins = [
+    "pylint.extensions.docparams",
+    "pylint.extensions.docstyle"
+]
+
+[tool.pylint.messages_control]
+disable = [
+    "too-many-arguments",
+    "too-many-locals", 
+    "too-many-branches",
+    "too-many-statements",
+    "too-few-public-methods",
+    "import-error"  # Handled by mypy
+]
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config"
+]
+testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow",
+    "integration: marks tests as integration tests",
+    "gui: marks tests that require GUI",
+    "ffmpeg: marks tests that require FFmpeg"
+]
+
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "auto-highlighter-py"
-version = "0.2.0"
+name = "m0-clipper"
+version = "0.3.0"
 description = "AI-powered automatic highlight clip generator for gaming videos and streams"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -43,9 +133,13 @@ dev = [
     "mypy>=0.991",
 ]
 
+build = [
+    "pyinstaller>=5.0"
+]
+
 [project.scripts]
-auto-highlighter = "highlighter:cli"
-highlighter-gui = "highlighter.gui:main"
+m0-clipper = "highlighter.__main__:main"
+m0-clipper-gui = "highlighter.gui:main"
 
 [project.urls]
 Homepage = "https://github.com/cvrdincake/m0_clipper"

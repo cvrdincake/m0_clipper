@@ -1,0 +1,20 @@
+# Requirements for building M0 Clipper executable
+# Install with: pip install -r requirements-build.txt
+
+# Core application dependencies
+librosa>=0.10.0
+soundfile>=0.12.0
+numpy>=1.21.0
+rich>=13.0.0
+loguru>=0.7.0
+typer>=0.9.0
+psutil>=5.9.0
+
+# GUI dependencies
+tkinterdnd2>=0.3.0
+
+# Build tools
+pyinstaller>=6.0.0
+
+# Optional: For better compression
+upx-ucl; platform_system=="Windows"

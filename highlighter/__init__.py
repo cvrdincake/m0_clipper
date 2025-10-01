@@ -13,8 +13,8 @@ from typing_extensions import Annotated
 
 console = Console()
 
-__all__ = ['processor', 'common', 'analyzer', 'gui']
-from . import processor, common, analyzer, gui
+__all__ = ['processor', 'common', 'analyzer', 'gui', 'core']
+from . import processor, common, analyzer, gui, core
 
 DEFAULT_TEMP_DIR = tempfile.TemporaryDirectory()
 
@@ -88,10 +88,17 @@ Here are better options based on your audio characteristics:
 def launch_gui():
     """Launch the graphical user interface."""
     try:
-        gui.main()
+        # Use new modular GUI architecture
+        from .gui import main as gui_main
+        gui_main()
     except ImportError as e:
-        console.print(f"[red]Error:[/] GUI dependencies not available: {e}")
-        console.print("[yellow]Install GUI dependencies with:[/] pip install tkinterdnd2")
+        # Fallback to legacy GUI bridge
+        try:
+            from . import gui_bridge
+            gui_bridge.main()
+        except ImportError:
+            console.print(f"[red]Error:[/] GUI dependencies not available: {e}")
+            console.print("[yellow]Install GUI dependencies with:[/] pip install tkinterdnd2")
     except Exception as e:
         console.print(f"[red]Error starting GUI:[/] {e}")
 
