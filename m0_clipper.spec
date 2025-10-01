@@ -7,7 +7,6 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('simplified-icon.png', '.'),
         ('highlighter', 'highlighter'),
     ],
     hiddenimports=[
@@ -23,7 +22,24 @@ a = Analysis(
         'loguru',
         'typer',
         'psutil',
+        'ffmpeg',
         'highlighter.gui',
+        'highlighter.gui.main_window',
+        'highlighter.gui.components',
+        'highlighter.gui.components.video_input',
+        'highlighter.gui.components.settings_panel',
+        'highlighter.gui.components.control_panel',
+        'highlighter.gui.components.status_display',
+        'highlighter.gui.services',
+        'highlighter.gui.services.analysis_service',
+        'highlighter.gui.services.notification_service',
+        'highlighter.gui.state',
+        'highlighter.gui.state.app_state',
+        'highlighter.core',
+        'highlighter.core.exceptions',
+        'highlighter.core.error_handler',
+        'highlighter.core.validation',
+        'highlighter.core.logging_config',
         'highlighter.analyzer',
         'highlighter.processor',
         'highlighter.common',
@@ -64,5 +80,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='simplified-icon.png',  # Add icon to executable
+    # icon='simplified-icon.ico',  # Uncomment when you have an ICO file
 )

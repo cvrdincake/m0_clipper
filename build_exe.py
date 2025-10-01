@@ -10,6 +10,32 @@ import os
 import shutil
 from pathlib import Path
 
+def check_dependencies():
+    """Check and install required build dependencies."""
+    print("🔍 Checking build dependencies...")
+    
+    # Check PyInstaller
+    try:
+        import PyInstaller
+        print(f"✅ PyInstaller {PyInstaller.__version__} found")
+    except ImportError:
+        print("❌ PyInstaller not found. Installing...")
+        subprocess.run([sys.executable, '-m', 'pip', 'install', 'pyinstaller'], check=True)
+        print("✅ PyInstaller installed")
+    
+    # Check for Pillow (for icon conversion)
+    try:
+        import PIL
+        print(f"✅ Pillow found (version: {PIL.__version__})")
+    except ImportError:
+        print("⚠️  Pillow not found (optional for icon conversion)")
+        print("   Installing Pillow for better icon support...")
+        try:
+            subprocess.run([sys.executable, '-m', 'pip', 'install', 'Pillow'], check=True)
+            print("✅ Pillow installed")
+        except subprocess.CalledProcessError:
+            print("⚠️  Could not install Pillow - building without custom icon")
+
 def build_executable():
     """Build the M0 Clipper executable."""
     print("🔨 Building M0 Clipper executable...")
@@ -27,8 +53,9 @@ def build_executable():
         result = subprocess.run([
             sys.executable, '-m', 'PyInstaller', 
             'm0_clipper.spec',
-            '--clean'
-        ], check=True, capture_output=True, text=True)
+            '--clean',
+            '--noconfirm'
+        ], check=True, capture_output=False, text=True)
         
         print("✅ Build completed successfully!")
         
@@ -52,16 +79,33 @@ def build_executable():
 ## Quick Start
 1. Double-click M0_Clipper.exe to launch the application
 2. Drag and drop your video file onto the window
-3. Click "Generate Highlights" to start processing
+3. Adjust settings if needed (decibel threshold, clip length)
+4. Click "Generate Highlights" to start processing
 
 ## Requirements
-- FFmpeg must be installed on your system
+- FFmpeg must be installed on your system and available in PATH
 - Windows 10/11 (64-bit)
+- Sufficient disk space for output videos
+
+## Features
+- Professional modular GUI with glassmorphism design
+- Streaming and legacy processing modes
+- Reference analysis for optimal threshold detection
+- Comprehensive error handling and user feedback
+- Batch processing capabilities
 
 ## Troubleshooting
 - If the app doesn't start, try running from command prompt to see error messages
-- Make sure FFmpeg is in your system PATH
+- Make sure FFmpeg is in your system PATH (test with: ffmpeg -version)
 - For best performance, process videos from local storage (not network drives)
+- Check the logs folder for detailed error information
+
+## New in This Version
+- Complete infrastructure transformation to modular architecture
+- Enhanced error handling and validation
+- Professional state management system
+- Improved user interface with better feedback
+- Comprehensive logging system
 
 ## Support
 For issues and documentation, visit: https://github.com/cvrdincake/m0_clipper
@@ -72,33 +116,32 @@ For issues and documentation, visit: https://github.com/cvrdincake/m0_clipper
             
             print(f"📦 Portable distribution created: {dist_folder}")
             return True
+        else:
+            print("❌ Executable not found after build")
+            return False
             
     except subprocess.CalledProcessError as e:
         print(f"❌ Build failed!")
-        print(f"Error: {e}")
-        if e.stdout:
-            print(f"stdout: {e.stdout}")
-        if e.stderr:
-            print(f"stderr: {e.stderr}")
+        print(f"Error code: {e.returncode}")
+        print("\n💡 Common solutions:")
+        print("   • Install Pillow: pip install Pillow")
+        print("   • Convert icon to ICO format or remove icon line from spec")
+        print("   • Check that all dependencies are installed")
+        print("   • Try building with console=True for debugging")
         return False
 
 def main():
     """Main build function."""
-    print("M0 Clipper Build System")
+    print("M0 Clipper Build System for Windows")
     print("=" * 40)
     
-    # Check if PyInstaller is available
-    try:
-        import PyInstaller
-        print(f"✅ PyInstaller {PyInstaller.__version__} found")
-    except ImportError:
-        print("❌ PyInstaller not found. Installing...")
-        subprocess.run([sys.executable, '-m', 'pip', 'install', 'pyinstaller'], check=True)
-        print("✅ PyInstaller installed")
+    # Check dependencies first
+    check_dependencies()
     
     # Check if spec file exists
     if not os.path.exists('m0_clipper.spec'):
         print("❌ m0_clipper.spec not found!")
+        print("   Make sure you're running this from the project root directory")
         return 1
     
     # Build the executable
@@ -109,7 +152,8 @@ def main():
         print("💡 Tip: Test the executable on a clean system to ensure all dependencies are included")
         return 0
     else:
-        print("\n💥 Build failed!")
+        print("\n💥 Build failed! Check the output above for errors.")
+        print("Make sure all dependencies are installed and try again.")
         return 1
 
 if __name__ == '__main__':
