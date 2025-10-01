@@ -56,6 +56,15 @@ pip install ffmpeg-python librosa loguru numpy rich scikit-learn typer tkinterdn
 
 ## Troubleshooting
 
+### "module 'ffmpeg' has no attribute 'input'"
+This error indicates an issue with the ffmpeg-python library:
+```cmd
+pip uninstall ffmpeg-python
+pip install ffmpeg-python
+```
+
+If that doesn't work, the application will automatically fall back to using FFmpeg directly.
+
 ### "FFmpeg not found"
 - Make sure FFmpeg is in your PATH
 - Restart Command Prompt after adding to PATH

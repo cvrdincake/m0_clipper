@@ -285,11 +285,15 @@ class HighlighterGUI:
         
         def run_reference_analysis():
             try:
+                self.root.after(0, lambda: self.log_message("Extracting audio from video..."))
+                
                 # Extract audio
                 audio_path = processor.extract_audio_from_video(
                     self.current_video_path.get(), 
                     self.temp_dir.name
                 )
+                
+                self.root.after(0, lambda: self.log_message("Analyzing audio characteristics..."))
                 
                 # Analyze audio
                 audio_processor = processor.AudioProcessor(audio_path)
@@ -300,6 +304,9 @@ class HighlighterGUI:
                 # Update UI in main thread
                 self.root.after(0, lambda: self.show_reference_results(avg_db, max_db, recommended_threshold))
                 
+            except RuntimeError as e:
+                error_msg = str(e)
+                self.root.after(0, lambda: self.show_ffmpeg_error(error_msg))
             except Exception as e:
                 error_msg = str(e)
                 self.root.after(0, lambda: self.log_message(f"Reference analysis failed: {error_msg}"))
@@ -320,6 +327,26 @@ class HighlighterGUI:
                               f"Use recommended threshold of {recommended_threshold:.1f} dB?"):
             self.decibel_threshold.set(recommended_threshold)
             self.threshold_label.configure(text=f"{recommended_threshold:.1f} dB")
+            
+    def show_ffmpeg_error(self, error_msg):
+        """Show FFmpeg-specific error with helpful guidance."""
+        self.log_message(f"❌ FFmpeg Error: {error_msg}")
+        
+        if "not found" in error_msg.lower():
+            messagebox.showerror("FFmpeg Not Found", 
+                               "FFmpeg is not installed or not in your PATH.\n\n"
+                               "Please install FFmpeg:\n"
+                               "• Windows: Download from https://ffmpeg.org or use 'choco install ffmpeg'\n"
+                               "• macOS: 'brew install ffmpeg'\n"
+                               "• Linux: 'sudo apt install ffmpeg' or similar\n\n"
+                               "After installation, restart the application.")
+        else:
+            messagebox.showerror("FFmpeg Error", 
+                               f"FFmpeg failed to process the video:\n\n{error_msg}\n\n"
+                               "Please check:\n"
+                               "• Video file is not corrupted\n"
+                               "• You have write permissions to the output directory\n"
+                               "• FFmpeg is properly installed")
             
     def start_analysis(self):
         """Start the highlight analysis process."""
@@ -390,6 +417,9 @@ class HighlighterGUI:
             # Analysis complete
             self.root.after(0, lambda: self.analysis_complete(highlight_count))
             
+        except RuntimeError as e:
+            error_msg = str(e)
+            self.root.after(0, lambda: self.analysis_failed_ffmpeg(error_msg))
         except Exception as e:
             error_msg = str(e)
             self.root.after(0, lambda: self.analysis_failed(error_msg))
@@ -421,6 +451,30 @@ class HighlighterGUI:
         
         self.log_message(f"❌ Analysis failed: {error_message}")
         messagebox.showerror("Analysis Failed", f"Analysis failed with error:\n\n{error_message}")
+        
+    def analysis_failed_ffmpeg(self, error_message):
+        """Handle FFmpeg-specific analysis failure."""
+        self.is_analyzing = False
+        self.progress_bar.stop()
+        self.analyze_btn.configure(text="🎬 Generate Highlights", state='normal')
+        
+        self.log_message(f"❌ FFmpeg Error: {error_message}")
+        
+        if "not found" in error_message.lower():
+            messagebox.showerror("FFmpeg Not Found", 
+                               "FFmpeg is required but not found on your system.\n\n"
+                               "Please install FFmpeg:\n"
+                               "• Windows: Download from https://ffmpeg.org or use 'choco install ffmpeg'\n"
+                               "• macOS: 'brew install ffmpeg'\n"
+                               "• Linux: 'sudo apt install ffmpeg'\n\n"
+                               "After installation, restart the application.")
+        else:
+            messagebox.showerror("Video Processing Error", 
+                               f"Failed to process video file:\n\n{error_message}\n\n"
+                               "Please check:\n"
+                               "• Video file is not corrupted\n"
+                               "• File format is supported\n"
+                               "• You have sufficient disk space")
         
     def open_output_folder(self):
         """Open the output folder in the file manager."""

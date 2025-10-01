@@ -1,9 +1,18 @@
 import os
 import librosa
 import numpy as np
-import ffmpeg
+import subprocess
+import sys
 
 from loguru import logger
+
+# Try to import ffmpeg-python, fall back to subprocess if not available
+try:
+    import ffmpeg
+    FFMPEG_PYTHON_AVAILABLE = True
+except ImportError:
+    FFMPEG_PYTHON_AVAILABLE = False
+    logger.warning("ffmpeg-python not available, falling back to subprocess")
 
 BITRATE = '160k'
 SAMPLING_RATE = 48000
@@ -20,16 +29,44 @@ def extract_audio_from_video(video_path: str, output_path: str):
     file_base = os.path.splitext(os.path.basename(video_path))[0].replace(':', ' ')
     audio_path = os.path.join(output_path, f'{file_base}.wav')
     
-    (
-        ffmpeg
-        .input(video_path)
-        .output(audio_path, **{'ab': BITRATE, 'ar': SAMPLING_RATE, 'ac': CHANNELS})
-        .run()
-    )
+    if FFMPEG_PYTHON_AVAILABLE:
+        try:
+            # Try using ffmpeg-python first
+            (
+                ffmpeg
+                .input(video_path)
+                .output(audio_path, **{'ab': BITRATE, 'ar': SAMPLING_RATE, 'ac': CHANNELS})
+                .overwrite_output()
+                .run(quiet=True, capture_stdout=True)
+            )
+            logger.info(f'audio extracted from {video_path} to {audio_path} using ffmpeg-python')
+            return audio_path
+        except Exception as e:
+            logger.warning(f'ffmpeg-python failed: {e}, falling back to subprocess')
     
-    logger.info(f'audio extracted from {video_path} to {audio_path}')
-    
-    return audio_path
+    # Fallback to subprocess
+    try:
+        cmd = [
+            'ffmpeg', '-i', video_path,
+            '-ab', BITRATE,
+            '-ar', str(SAMPLING_RATE),
+            '-ac', str(CHANNELS),
+            '-y',  # Overwrite output file
+            audio_path
+        ]
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        logger.info(f'audio extracted from {video_path} to {audio_path} using subprocess')
+        return audio_path
+        
+    except subprocess.CalledProcessError as e:
+        error_msg = f"FFmpeg failed: {e.stderr if e.stderr else str(e)}"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg)
+    except FileNotFoundError:
+        error_msg = "FFmpeg not found. Please install FFmpeg and ensure it's in your PATH."
+        logger.error(error_msg)
+        raise RuntimeError(error_msg)
     
     
 class AudioProcessor:
