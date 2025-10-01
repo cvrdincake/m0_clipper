@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Simple GUI client for the auto-highlighter tool.
-Provides drag-and-drop functionality for VOD video files.
+Professional glassmorphism GUI client for the auto-highlighter tool.
+Features modern dark mode design with smooth animations and glass effects.
 """
 
 import tkinter as tk
@@ -21,214 +21,752 @@ except ImportError:
 
 from . import analyzer, processor
 from .common import similarity
+from .animations import show_boot_sequence, show_glitch_effect
+from rich.console import Console
 
 
-class HighlighterGUI:
+class ModernHighlighterGUI:
+    """Professional glassmorphism GUI for M0 Clipper."""
+    
+    # Glassmorphism Color Palette
+    COLORS = {
+        'bg_primary': '#0F0F0F',        # Deep black background
+        'bg_secondary': '#1A1A1A',      # Secondary black
+        'bg_glass': '#1F1F1F',          # Glass panel background
+        'bg_glass_hover': '#2A2A2A',    # Glass panel hover
+        'accent': '#FFFFFF',            # Pure white accent
+        'accent_dim': '#E0E0E0',        # Dimmed white
+        'text_primary': '#FFFFFF',      # Primary text
+        'text_secondary': '#B0B0B0',    # Secondary text
+        'text_muted': '#808080',        # Muted text
+        'border': '#333333',            # Border color
+        'border_focus': '#505050',      # Focused border
+        'success': '#00FF88',           # Success green
+        'warning': '#FFAA00',           # Warning orange
+        'error': '#FF4444',             # Error red
+        'glass_alpha': '80'             # Transparency for glass effects
+    }
+    
     def __init__(self):
-        # Create main window with drag-and-drop support if available
+        # Create main window with drag-and-drop support
         if DND_AVAILABLE:
             self.root = TkinterDnD.Tk()
         else:
             self.root = tk.Tk()
             
-        self.root.title("Auto Highlighter - VOD Clip Generator")
-        self.root.geometry("600x500")
-        self.root.resizable(True, True)
+        self.root.title("M0 Clipper - Professional Highlight Generator")
+        self.root.geometry("900x700")
+        self.root.minsize(800, 600)
+        self.root.configure(bg=self.COLORS['bg_primary'])
         
-        # Configure style
-        self.style = ttk.Style()
-        self.style.theme_use('clam')
+        # Configure modern styling
+        self.setup_modern_styles()
         
         # Variables
         self.current_video_path = tk.StringVar()
         self.output_directory = tk.StringVar(value=os.path.join(os.getcwd(), "highlights"))
-        self.decibel_threshold = tk.DoubleVar(value=-10.0)  # Better default for gaming content
-        self.clip_length = tk.IntVar(value=30)  # Total clip length in seconds
+        self.decibel_threshold = tk.DoubleVar(value=-10.0)
+        self.clip_length = tk.IntVar(value=30)
+        self.use_streaming = tk.BooleanVar(value=True)  # Default to streaming
         self.verbose_logging = tk.BooleanVar(value=False)
         
-        # Analysis state
+        # Animation state
         self.is_analyzing = False
         self.analysis_thread: Optional[threading.Thread] = None
         self.temp_dir = tempfile.TemporaryDirectory()
+        self.rich_console = Console()  # For terminal animations
         
-        self.setup_ui()
+        # Animation state
+        self.hover_states = {}
         
-    def setup_ui(self):
-        """Set up the user interface."""
-        # Main container
-        main_frame = ttk.Frame(self.root, padding="10")
-        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.setup_modern_ui()
+        
+        # Show cyber boot sequence on startup
+        self._show_startup_sequence()
+        
+    def _show_startup_sequence(self):
+        """Show futuristic startup sequence in console."""
+        try:
+            # Run boot sequence in background to not block GUI
+            def boot_worker():
+                show_boot_sequence(self.rich_console)
+            
+            boot_thread = threading.Thread(target=boot_worker, daemon=True)
+            boot_thread.start()
+        except Exception as e:
+            # Graceful fallback if animations fail
+            pass
+    
+    def _show_completion_effect(self, message: str):
+        """Show completion effect in console."""
+        try:
+            def effect_worker():
+                show_glitch_effect(message, self.rich_console, duration=1.5)
+            
+            effect_thread = threading.Thread(target=effect_worker, daemon=True)
+            effect_thread.start()
+        except Exception as e:
+            # Graceful fallback if animations fail
+            pass
+    
+    def setup_modern_styles(self):
+        """Configure modern glassmorphism styling."""
+        self.style = ttk.Style()
+        
+        # Configure dark theme base
+        self.style.theme_use('clam')
+        
+        # Glass Panel Style
+        self.style.configure(
+            'Glass.TFrame',
+            background=self.COLORS['bg_glass'],
+            relief='flat',
+            borderwidth=1
+        )
+        
+        # Modern Button Styles
+        self.style.configure(
+            'Modern.TButton',
+            background=self.COLORS['bg_glass'],
+            foreground=self.COLORS['text_primary'],
+            borderwidth=1,
+            relief='flat',
+            font=('Segoe UI', 10, 'normal'),
+            padding=(20, 10)
+        )
+        
+        self.style.configure(
+            'Accent.TButton',
+            background=self.COLORS['accent'],
+            foreground=self.COLORS['bg_primary'],
+            borderwidth=0,
+            relief='flat',
+            font=('Segoe UI', 11, 'bold'),
+            padding=(25, 12)
+        )
+        
+        # Modern Entry Style
+        self.style.configure(
+            'Modern.TEntry',
+            fieldbackground=self.COLORS['bg_glass'],
+            foreground=self.COLORS['text_primary'],
+            borderwidth=1,
+            relief='flat',
+            insertcolor=self.COLORS['accent']
+        )
+        
+        # Modern Label Styles
+        self.style.configure(
+            'Title.TLabel',
+            background=self.COLORS['bg_primary'],
+            foreground=self.COLORS['accent'],
+            font=('Segoe UI', 24, 'bold')
+        )
+        
+        self.style.configure(
+            'Subtitle.TLabel',
+            background=self.COLORS['bg_primary'],
+            foreground=self.COLORS['text_secondary'],
+            font=('Segoe UI', 12, 'normal')
+        )
+        
+        self.style.configure(
+            'Glass.TLabel',
+            background=self.COLORS['bg_glass'],
+            foreground=self.COLORS['text_primary'],
+            font=('Segoe UI', 10, 'normal')
+        )
+        
+        self.style.configure(
+            'GlassSecondary.TLabel',
+            background=self.COLORS['bg_glass'],
+            foreground=self.COLORS['text_secondary'],
+            font=('Segoe UI', 9, 'normal')
+        )
+        
+        # Modern LabelFrame Style
+        self.style.configure(
+            'Glass.TLabelframe',
+            background=self.COLORS['bg_glass'],
+            foreground=self.COLORS['text_primary'],
+            borderwidth=1,
+            relief='flat'
+        )
+        
+        self.style.configure(
+            'Glass.TLabelframe.Label',
+            background=self.COLORS['bg_glass'],
+            foreground=self.COLORS['accent'],
+            font=('Segoe UI', 11, 'bold')
+        )
+        
+        # Modern Scale Style
+        self.style.configure(
+            'Modern.Horizontal.TScale',
+            background=self.COLORS['bg_glass'],
+            troughcolor=self.COLORS['bg_secondary'],
+            borderwidth=0,
+            lightcolor=self.COLORS['accent'],
+            darkcolor=self.COLORS['accent']
+        )
+        
+        # Modern Progressbar Style
+        self.style.configure(
+            'Modern.Horizontal.TProgressbar',
+            background=self.COLORS['accent'],
+            troughcolor=self.COLORS['bg_secondary'],
+            borderwidth=0,
+            lightcolor=self.COLORS['accent'],
+            darkcolor=self.COLORS['accent']
+        )
+        
+    def setup_modern_ui(self):
+        """Set up the modern glassmorphism user interface."""
+        # Main container with padding
+        main_container = tk.Frame(self.root, bg=self.COLORS['bg_primary'])
+        main_container.pack(fill=tk.BOTH, expand=True, padx=30, pady=30)
         
         # Configure grid weights
-        self.root.columnconfigure(0, weight=1)
-        self.root.rowconfigure(0, weight=1)
-        main_frame.columnconfigure(1, weight=1)
+        main_container.columnconfigure(0, weight=1)
+        main_container.rowconfigure(1, weight=1)
         
-        # Title
-        title_label = ttk.Label(main_frame, text="⚡ Auto Highlighter ⚡", 
-                               font=('TkDefaultFont', 16, 'bold'))
-        title_label.grid(row=0, column=0, columnspan=2, pady=(0, 20))
+        # Header section
+        self.setup_header(main_container)
         
-        # Video file selection
-        self.setup_video_selection(main_frame, row=1)
+        # Content area with glass panels
+        content_frame = tk.Frame(main_container, bg=self.COLORS['bg_primary'])
+        content_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(20, 0))
+        content_frame.columnconfigure(0, weight=1)
+        content_frame.rowconfigure(2, weight=1)
         
-        # Settings section
-        self.setup_settings_section(main_frame, row=2)
+        # Video input panel
+        self.setup_video_input_panel(content_frame)
         
-        # Control buttons
-        self.setup_control_buttons(main_frame, row=3)
+        # Settings panel
+        self.setup_settings_panel(content_frame)
         
-        # Progress and results
-        self.setup_progress_section(main_frame, row=4)
+        # Progress panel
+        self.setup_progress_panel(content_frame)
         
-    def setup_video_selection(self, parent, row):
-        """Set up the video file selection area."""
-        # Video file section
-        video_frame = ttk.LabelFrame(parent, text="Video File", padding="10")
-        video_frame.grid(row=row, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
-        video_frame.columnconfigure(1, weight=1)
+        # Control panel
+        self.setup_control_panel(content_frame)
         
-        # Drag and drop area
+    def setup_header(self, parent):
+        """Set up the modern header section."""
+        header_frame = tk.Frame(parent, bg=self.COLORS['bg_primary'])
+        header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        header_frame.columnconfigure(1, weight=1)
+        
+        # App icon/logo area
+        icon_frame = tk.Frame(header_frame, bg=self.COLORS['bg_primary'], width=60, height=60)
+        icon_frame.grid(row=0, column=0, padx=(0, 20), sticky=tk.W)
+        icon_frame.grid_propagate(False)
+        
+        # Icon placeholder (you can add an actual icon here)
+        icon_label = tk.Label(
+            icon_frame, 
+            text="🎬", 
+            bg=self.COLORS['bg_primary'],
+            fg=self.COLORS['accent'],
+            font=('Segoe UI', 32)
+        )
+        icon_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+        # Title and subtitle
+        title_frame = tk.Frame(header_frame, bg=self.COLORS['bg_primary'])
+        title_frame.grid(row=0, column=1, sticky=(tk.W, tk.E))
+        
+        title_label = ttk.Label(
+            title_frame, 
+            text="M0 Clipper", 
+            style='Title.TLabel'
+        )
+        title_label.grid(row=0, column=0, sticky=tk.W)
+        
+        subtitle_label = ttk.Label(
+            title_frame, 
+            text="Professional Highlight Generator v0.2.0", 
+            style='Subtitle.TLabel'
+        )
+        subtitle_label.grid(row=1, column=0, sticky=tk.W)
+        
+        # Status indicator
+        self.status_indicator = tk.Label(
+            header_frame,
+            text="●",
+            bg=self.COLORS['bg_primary'],
+            fg=self.COLORS['success'],
+            font=('Segoe UI', 16)
+        )
+        self.status_indicator.grid(row=0, column=2, padx=(20, 0))
+        
+    def setup_video_input_panel(self, parent):
+        """Set up the modern video input panel with glassmorphism."""
+        # Glass panel container
+        panel = self.create_glass_panel(parent, "Video Input")
+        panel.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
+        
+        # Modern drag and drop area
         if DND_AVAILABLE:
-            self.drop_frame = tk.Frame(video_frame, bg='lightgray', height=60, 
-                                     relief=tk.RAISED, borderwidth=2)
-            self.drop_frame.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
-            self.drop_frame.columnconfigure(0, weight=1)
-            
-            drop_label = tk.Label(self.drop_frame, text="📁 Drag and drop a video file here, or click Browse", 
-                                bg='lightgray', font=('TkDefaultFont', 10))
-            drop_label.grid(row=0, column=0, pady=20)
-            
-            # Register drop target
-            self.drop_frame.drop_target_register(DND_FILES)
-            self.drop_frame.dnd_bind('<<Drop>>', self.on_file_drop)
-            
-            # Make drop area clickable
-            self.drop_frame.bind("<Button-1>", lambda e: self.browse_video_file())
-            drop_label.bind("<Button-1>", lambda e: self.browse_video_file())
+            self.drop_area = self.create_modern_drop_area(panel)
+            self.drop_area.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 15))
         else:
-            # Fallback: just a button if DND not available
-            fallback_frame = tk.Frame(video_frame, bg='lightblue', height=60, 
-                                    relief=tk.RAISED, borderwidth=2)
-            fallback_frame.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
-            fallback_frame.columnconfigure(0, weight=1)
-            
-            fallback_label = tk.Label(fallback_frame, text="📁 Click here to browse for a video file", 
-                                    bg='lightblue', font=('TkDefaultFont', 10))
-            fallback_label.grid(row=0, column=0, pady=20)
-            
-            # Make fallback area clickable
-            fallback_frame.bind("<Button-1>", lambda e: self.browse_video_file())
-            fallback_label.bind("<Button-1>", lambda e: self.browse_video_file())
+            self.drop_area = self.create_fallback_area(panel)
+            self.drop_area.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 15))
         
         # File path display
-        ttk.Label(video_frame, text="Selected file:").grid(row=1, column=0, sticky=tk.W, pady=(5, 0))
-        self.file_entry = ttk.Entry(video_frame, textvariable=self.current_video_path, state='readonly')
-        self.file_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(5, 0), pady=(5, 0))
+        path_frame = tk.Frame(panel, bg=self.COLORS['bg_glass'])
+        path_frame.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
+        path_frame.columnconfigure(1, weight=1)
         
-        # Browse button
-        browse_btn = ttk.Button(video_frame, text="Browse...", command=self.browse_video_file)
-        browse_btn.grid(row=1, column=2, padx=(5, 0), pady=(5, 0))
+        ttk.Label(
+            path_frame, 
+            text="Selected:", 
+            style='Glass.TLabel'
+        ).grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
         
-    def setup_settings_section(self, parent, row):
-        """Set up the settings configuration section."""
-        settings_frame = ttk.LabelFrame(parent, text="Analysis Settings", padding="10")
-        settings_frame.grid(row=row, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
-        settings_frame.columnconfigure(1, weight=1)
+        self.file_entry = ttk.Entry(
+            path_frame, 
+            textvariable=self.current_video_path, 
+            state='readonly',
+            style='Modern.TEntry',
+            font=('Segoe UI', 10)
+        )
+        self.file_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(0, 10))
+        
+        # Modern browse button
+        browse_btn = ttk.Button(
+            path_frame,
+            text="Browse",
+            command=self.browse_video_file,
+            style='Modern.TButton'
+        )
+        browse_btn.grid(row=0, column=2)
+        
+    def create_glass_panel(self, parent, title):
+        """Create a glassmorphism panel with title."""
+        panel_frame = ttk.LabelFrame(
+            parent,
+            text=title,
+            style='Glass.TLabelframe',
+            padding=20
+        )
+        return panel_frame
+        
+    def create_modern_drop_area(self, parent):
+        """Create modern drag and drop area with glassmorphism styling."""
+        drop_container = tk.Frame(parent, bg=self.COLORS['bg_glass'])
+        
+        # Main drop area
+        self.drop_frame = tk.Frame(
+            drop_container,
+            bg=self.COLORS['bg_secondary'],
+            relief='flat',
+            borderwidth=2,
+            height=120
+        )
+        self.drop_frame.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
+        self.drop_frame.pack_propagate(False)
+        
+        # Drop content
+        content_frame = tk.Frame(self.drop_frame, bg=self.COLORS['bg_secondary'])
+        content_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+        # Drop icon
+        drop_icon = tk.Label(
+            content_frame,
+            text="⬇",
+            bg=self.COLORS['bg_secondary'],
+            fg=self.COLORS['text_muted'],
+            font=('Segoe UI', 24)
+        )
+        drop_icon.pack()
+        
+        # Drop text
+        drop_label = tk.Label(
+            content_frame,
+            text="Drop video file here or click to browse",
+            bg=self.COLORS['bg_secondary'],
+            fg=self.COLORS['text_secondary'],
+            font=('Segoe UI', 11)
+        )
+        drop_label.pack(pady=(5, 0))
+        
+        # Supported formats
+        formats_label = tk.Label(
+            content_frame,
+            text="Supports: MP4, AVI, MOV, MKV, and more",
+            bg=self.COLORS['bg_secondary'],
+            fg=self.COLORS['text_muted'],
+            font=('Segoe UI', 9)
+        )
+        formats_label.pack(pady=(3, 0))
+        
+        # Register drag and drop
+        self.drop_frame.drop_target_register(DND_FILES)
+        self.drop_frame.dnd_bind('<<Drop>>', self.on_file_drop)
+        
+        # Click to browse
+        self.drop_frame.bind("<Button-1>", lambda e: self.browse_video_file())
+        for widget in [content_frame, drop_icon, drop_label, formats_label]:
+            widget.bind("<Button-1>", lambda e: self.browse_video_file())
+        
+        # Hover effects
+        self.setup_drop_hover_effects()
+        
+        return drop_container
+        
+    def create_fallback_area(self, parent):
+        """Create fallback area when drag-and-drop is not available."""
+        fallback_container = tk.Frame(parent, bg=self.COLORS['bg_glass'])
+        
+        fallback_frame = tk.Frame(
+            fallback_container,
+            bg=self.COLORS['bg_secondary'],
+            relief='flat',
+            borderwidth=2,
+            height=120
+        )
+        fallback_frame.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
+        fallback_frame.pack_propagate(False)
+        
+        content_frame = tk.Frame(fallback_frame, bg=self.COLORS['bg_secondary'])
+        content_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+        browse_icon = tk.Label(
+            content_frame,
+            text="📁",
+            bg=self.COLORS['bg_secondary'],
+            fg=self.COLORS['text_muted'],
+            font=('Segoe UI', 24)
+        )
+        browse_icon.pack()
+        
+        browse_label = tk.Label(
+            content_frame,
+            text="Click here to browse for video files",
+            bg=self.COLORS['bg_secondary'],
+            fg=self.COLORS['text_secondary'],
+            font=('Segoe UI', 11)
+        )
+        browse_label.pack(pady=(5, 0))
+        
+        # Click handler
+        fallback_frame.bind("<Button-1>", lambda e: self.browse_video_file())
+        for widget in [content_frame, browse_icon, browse_label]:
+            widget.bind("<Button-1>", lambda e: self.browse_video_file())
+            
+        return fallback_container
+        
+    def setup_drop_hover_effects(self):
+        """Set up hover effects for the drop area."""
+        def on_enter(event):
+            self.drop_frame.configure(bg=self.COLORS['bg_glass_hover'])
+            
+        def on_leave(event):
+            self.drop_frame.configure(bg=self.COLORS['bg_secondary'])
+            
+        self.drop_frame.bind("<Enter>", on_enter)
+        self.drop_frame.bind("<Leave>", on_leave)
+        
+    def setup_settings_panel(self, parent):
+        """Set up the modern settings panel."""
+        panel = self.create_glass_panel(parent, "Analysis Settings")
+        panel.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
+        panel.columnconfigure(1, weight=1)
         
         current_row = 0
         
         # Output directory
-        ttk.Label(settings_frame, text="Output directory:").grid(row=current_row, column=0, sticky=tk.W)
-        output_frame = ttk.Frame(settings_frame)
-        output_frame.grid(row=current_row, column=1, columnspan=2, sticky=(tk.W, tk.E), padx=(5, 0))
+        ttk.Label(
+            panel, 
+            text="Output Directory:", 
+            style='Glass.TLabel'
+        ).grid(row=current_row, column=0, sticky=tk.W, pady=(0, 10))
+        
+        output_frame = tk.Frame(panel, bg=self.COLORS['bg_glass'])
+        output_frame.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(15, 0), pady=(0, 10))
         output_frame.columnconfigure(0, weight=1)
         
-        self.output_entry = ttk.Entry(output_frame, textvariable=self.output_directory)
-        self.output_entry.grid(row=0, column=0, sticky=(tk.W, tk.E))
+        self.output_entry = ttk.Entry(
+            output_frame, 
+            textvariable=self.output_directory,
+            style='Modern.TEntry',
+            font=('Segoe UI', 10)
+        )
+        self.output_entry.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 10))
         
-        output_browse_btn = ttk.Button(output_frame, text="Browse...", command=self.browse_output_directory)
-        output_browse_btn.grid(row=0, column=1, padx=(5, 0))
+        output_browse_btn = ttk.Button(
+            output_frame,
+            text="Browse",
+            command=self.browse_output_directory,
+            style='Modern.TButton'
+        )
+        output_browse_btn.grid(row=0, column=1)
         
         current_row += 1
         
-        # Decibel threshold
-        ttk.Label(settings_frame, text="Decibel threshold:").grid(row=current_row, column=0, sticky=tk.W, pady=(5, 0))
-        threshold_frame = ttk.Frame(settings_frame)
-        threshold_frame.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(5, 0), pady=(5, 0))
+        # Decibel threshold with modern styling
+        ttk.Label(
+            panel, 
+            text="Detection Threshold:", 
+            style='Glass.TLabel'
+        ).grid(row=current_row, column=0, sticky=tk.W, pady=(10, 0))
         
-        threshold_scale = ttk.Scale(threshold_frame, from_=-20.0, to=10.0, 
-                                  variable=self.decibel_threshold, orient=tk.HORIZONTAL)
-        threshold_scale.grid(row=0, column=0, sticky=(tk.W, tk.E))
+        threshold_container = tk.Frame(panel, bg=self.COLORS['bg_glass'])
+        threshold_container.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(15, 0), pady=(10, 0))
+        threshold_container.columnconfigure(0, weight=1)
+        
+        # Threshold scale
+        threshold_frame = tk.Frame(threshold_container, bg=self.COLORS['bg_glass'])
+        threshold_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 5))
         threshold_frame.columnconfigure(0, weight=1)
         
-        self.threshold_label = ttk.Label(threshold_frame, text=f"{self.decibel_threshold.get():.1f} dB")
-        self.threshold_label.grid(row=0, column=1, padx=(5, 0))
+        threshold_scale = ttk.Scale(
+            threshold_frame,
+            from_=-20.0,
+            to=10.0,
+            variable=self.decibel_threshold,
+            orient=tk.HORIZONTAL,
+            style='Modern.Horizontal.TScale'
+        )
+        threshold_scale.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 10))
+        
+        self.threshold_label = ttk.Label(
+            threshold_frame,
+            text=f"{self.decibel_threshold.get():.1f} dB",
+            style='Glass.TLabel',
+            font=('Segoe UI', 10, 'bold')
+        )
+        self.threshold_label.grid(row=0, column=1)
         
         # Update label when scale changes
-        threshold_scale.configure(command=lambda val: self.threshold_label.configure(text=f"{float(val):.1f} dB"))
+        threshold_scale.configure(
+            command=lambda val: self.threshold_label.configure(
+                text=f"{float(val):.1f} dB"
+            )
+        )
+        
+        # Threshold description
+        threshold_desc = ttk.Label(
+            threshold_container,
+            text="Higher values = fewer clips, Lower values = more clips",
+            style='GlassSecondary.TLabel'
+        )
+        threshold_desc.grid(row=1, column=0, sticky=tk.W)
         
         current_row += 1
         
         # Clip length setting
-        ttk.Label(settings_frame, text="Clip length:").grid(row=current_row, column=0, sticky=tk.W, pady=(5, 0))
-        clip_frame = ttk.Frame(settings_frame)
-        clip_frame.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(5, 0), pady=(5, 0))
+        ttk.Label(
+            panel, 
+            text="Clip Duration:", 
+            style='Glass.TLabel'
+        ).grid(row=current_row, column=0, sticky=tk.W, pady=(15, 0))
         
-        clip_spin = ttk.Spinbox(clip_frame, from_=10, to=120, width=8, textvariable=self.clip_length)
+        clip_container = tk.Frame(panel, bg=self.COLORS['bg_glass'])
+        clip_container.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(15, 0), pady=(15, 0))
+        
+        clip_frame = tk.Frame(clip_container, bg=self.COLORS['bg_glass'])
+        clip_frame.grid(row=0, column=0, sticky=tk.W)
+        
+        clip_spin = ttk.Spinbox(
+            clip_frame,
+            from_=10,
+            to=120,
+            width=8,
+            textvariable=self.clip_length,
+            font=('Segoe UI', 10)
+        )
         clip_spin.grid(row=0, column=0)
         
-        ttk.Label(clip_frame, text="seconds (centered on highlight)").grid(row=0, column=1, padx=(5, 0))
+        ttk.Label(
+            clip_frame,
+            text="seconds (centered on highlight)",
+            style='Glass.TLabel'
+        ).grid(row=0, column=1, padx=(10, 0))
         
         current_row += 1
         
-        # Additional options
-        verbose_check = ttk.Checkbutton(settings_frame, text="Verbose logging", variable=self.verbose_logging)
-        verbose_check.grid(row=current_row, column=0, columnspan=2, sticky=tk.W, pady=(10, 0))
+        # Advanced options
+        advanced_frame = tk.Frame(panel, bg=self.COLORS['bg_glass'])
+        advanced_frame.grid(row=current_row, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(20, 0))
         
-    def setup_control_buttons(self, parent, row):
-        """Set up the control buttons."""
-        button_frame = ttk.Frame(parent)
-        button_frame.grid(row=row, column=0, columnspan=2, pady=(0, 10))
+        verbose_check = ttk.Checkbutton(
+            advanced_frame,
+            text="Enable verbose logging",
+            variable=self.verbose_logging
+        )
+        verbose_check.grid(row=0, column=0, sticky=tk.W)
         
-        # Reference analysis button
-        self.reference_btn = ttk.Button(button_frame, text="📊 Analyze Reference", 
-                                      command=self.analyze_reference)
-        self.reference_btn.grid(row=0, column=0, padx=(0, 10))
+        streaming_check = ttk.Checkbutton(
+            advanced_frame,
+            text="Use streaming processing (memory efficient)",
+            variable=self.use_streaming
+        )
+        streaming_check.grid(row=1, column=0, sticky=tk.W, pady=(5, 0))
         
-        # Start analysis button
-        self.analyze_btn = ttk.Button(button_frame, text="🎬 Generate Highlights", 
-                                    command=self.start_analysis, style='Accent.TButton')
-        self.analyze_btn.grid(row=0, column=1, padx=(0, 10))
-        
-        # Open output folder button
-        self.open_folder_btn = ttk.Button(button_frame, text="📁 Open Output Folder", 
-                                        command=self.open_output_folder)
-        self.open_folder_btn.grid(row=0, column=2)
-        
-    def setup_progress_section(self, parent, row):
-        """Set up the progress and results section."""
-        progress_frame = ttk.LabelFrame(parent, text="Progress", padding="10")
-        progress_frame.grid(row=row, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
-        progress_frame.columnconfigure(0, weight=1)
-        parent.rowconfigure(row, weight=1)
+    def setup_progress_panel(self, parent):
+        """Set up the modern progress panel."""
+        panel = self.create_glass_panel(parent, "Progress & Results")
+        panel.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 15))
+        panel.columnconfigure(0, weight=1)
+        parent.rowconfigure(2, weight=1)
         
         # Progress bar
-        self.progress_bar = ttk.Progressbar(progress_frame, mode='indeterminate')
-        self.progress_bar.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 5))
+        progress_frame = tk.Frame(panel, bg=self.COLORS['bg_glass'])
+        progress_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
+        progress_frame.columnconfigure(0, weight=1)
         
-        # Status text
-        self.status_text = tk.Text(progress_frame, height=8, wrap=tk.WORD, state='disabled')
-        self.status_text.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        progress_frame.rowconfigure(1, weight=1)
+        ttk.Label(
+            progress_frame,
+            text="Status:",
+            style='Glass.TLabel'
+        ).grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
         
-        # Scrollbar for status text
-        scrollbar = ttk.Scrollbar(progress_frame, orient=tk.VERTICAL, command=self.status_text.yview)
-        scrollbar.grid(row=1, column=1, sticky=(tk.N, tk.S))
+        self.progress_bar = ttk.Progressbar(
+            progress_frame,
+            mode='indeterminate',
+            style='Modern.Horizontal.TProgressbar'
+        )
+        self.progress_bar.grid(row=1, column=0, sticky=(tk.W, tk.E))
+        
+        # Status text area with modern styling
+        text_frame = tk.Frame(panel, bg=self.COLORS['bg_glass'])
+        text_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(15, 0))
+        text_frame.columnconfigure(0, weight=1)
+        text_frame.rowconfigure(0, weight=1)
+        
+        # Custom text widget with dark styling
+        self.status_text = tk.Text(
+            text_frame,
+            height=8,
+            wrap=tk.WORD,
+            state='disabled',
+            bg=self.COLORS['bg_secondary'],
+            fg=self.COLORS['text_primary'],
+            font=('Consolas', 9),
+            relief='flat',
+            borderwidth=0,
+            insertbackground=self.COLORS['accent']
+        )
+        self.status_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=2, pady=2)
+        
+        # Modern scrollbar
+        scrollbar = ttk.Scrollbar(
+            text_frame,
+            orient=tk.VERTICAL,
+            command=self.status_text.yview
+        )
+        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
         self.status_text.configure(yscrollcommand=scrollbar.set)
         
+    def setup_control_panel(self, parent):
+        """Set up the modern control panel."""
+        panel = tk.Frame(parent, bg=self.COLORS['bg_primary'])
+        panel.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 0))
+        
+        # Button container
+        button_container = tk.Frame(panel, bg=self.COLORS['bg_primary'])
+        button_container.pack(expand=True)
+        
+        # Reference analysis button
+        self.reference_btn = ttk.Button(
+            button_container,
+            text="📊 Analyze Reference",
+            command=self.analyze_reference,
+            style='Modern.TButton'
+        )
+        self.reference_btn.pack(side=tk.LEFT, padx=(0, 15))
+        
+        # Main action button
+        self.analyze_btn = ttk.Button(
+            button_container,
+            text="🎬 Generate Highlights",
+            command=self.start_analysis,
+            style='Accent.TButton'
+        )
+        self.analyze_btn.pack(side=tk.LEFT, padx=(0, 15))
+        
+        # Open folder button
+        self.open_folder_btn = ttk.Button(
+            button_container,
+            text="📁 Open Output",
+            command=self.open_output_folder,
+            style='Modern.TButton'
+        )
+        self.open_folder_btn.pack(side=tk.LEFT)
+        
+        # Add button hover effects
+        self.setup_button_animations()
+        
+    def setup_button_animations(self):
+        """Set up smooth hover animations for buttons."""
+        def create_hover_effect(button, normal_style, hover_style):
+            def on_enter(event):
+                button.configure(style=hover_style)
+                
+            def on_leave(event):
+                button.configure(style=normal_style)
+                
+            button.bind("<Enter>", on_enter)
+            button.bind("<Leave>", on_leave)
+        
+        # Create hover styles
+        self.style.configure(
+            'ModernHover.TButton',
+            background=self.COLORS['bg_glass_hover'],
+            foreground=self.COLORS['accent'],
+            borderwidth=1,
+            relief='flat'
+        )
+        
+        self.style.configure(
+            'AccentHover.TButton',
+            background=self.COLORS['accent_dim'],
+            foreground=self.COLORS['bg_primary'],
+            borderwidth=0,
+            relief='flat'
+        )
+        
+        # Apply hover effects
+        create_hover_effect(self.reference_btn, 'Modern.TButton', 'ModernHover.TButton')
+        create_hover_effect(self.open_folder_btn, 'Modern.TButton', 'ModernHover.TButton')
+        create_hover_effect(self.analyze_btn, 'Accent.TButton', 'AccentHover.TButton')
+        
+    def animate_status_indicator(self, state):
+        """Animate the status indicator."""
+        colors = {
+            'ready': self.COLORS['success'],
+            'analyzing': self.COLORS['warning'],
+            'error': self.COLORS['error']
+        }
+        
+        if state == 'analyzing':
+            # Pulsing animation for analyzing state
+            def pulse():
+                if self.is_analyzing:
+                    current_color = self.status_indicator.cget('fg')
+                    new_color = self.COLORS['warning'] if current_color == self.COLORS['text_muted'] else self.COLORS['text_muted']
+                    self.status_indicator.configure(fg=new_color)
+                    self.root.after(500, pulse)
+                else:
+                    self.status_indicator.configure(fg=colors.get('ready', self.COLORS['success']))
+            pulse()
+        else:
+            self.status_indicator.configure(fg=colors.get(state, self.COLORS['success']))
+    
+    def update_progress_bar_style(self, mode='indeterminate'):
+        """Update progress bar with smooth animations."""
+        if mode == 'indeterminate':
+            self.progress_bar.configure(mode='indeterminate')
+            self.progress_bar.start(10)  # Smooth animation
+        else:
+            self.progress_bar.stop()
+            self.progress_bar.configure(mode='determinate')
+    
     def on_file_drop(self, event):
-        """Handle file drop event."""
+        """Handle file drop event with modern visual feedback."""
         files = self.root.tk.splitlist(event.data)
         if files:
             file_path = files[0]
@@ -236,12 +774,28 @@ class HighlighterGUI:
             video_extensions = {'.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v'}
             if pathlib.Path(file_path).suffix.lower() in video_extensions:
                 self.current_video_path.set(file_path)
-                self.log_message(f"Video file loaded: {os.path.basename(file_path)}")
+                self.log_message(f"✅ Video file loaded: {os.path.basename(file_path)}")
+                self.animate_drop_success()
             else:
                 messagebox.showerror("Invalid File", "Please drop a video file.")
+                self.animate_drop_error()
+                
+    def animate_drop_success(self):
+        """Animate successful file drop."""
+        # Brief success animation
+        original_bg = self.drop_frame.cget('bg')
+        self.drop_frame.configure(bg=self.COLORS['success'])
+        self.root.after(150, lambda: self.drop_frame.configure(bg=original_bg))
+        
+    def animate_drop_error(self):
+        """Animate failed file drop."""
+        # Brief error animation
+        original_bg = self.drop_frame.cget('bg')
+        self.drop_frame.configure(bg=self.COLORS['error'])
+        self.root.after(150, lambda: self.drop_frame.configure(bg=original_bg))
                 
     def browse_video_file(self):
-        """Open file dialog to select video file."""
+        """Open file dialog to select video file with modern styling."""
         file_path = filedialog.askopenfilename(
             title="Select Video File",
             filetypes=[
@@ -251,18 +805,64 @@ class HighlighterGUI:
         )
         if file_path:
             self.current_video_path.set(file_path)
-            self.log_message(f"Video file selected: {os.path.basename(file_path)}")
+            self.log_message(f"✅ Video file selected: {os.path.basename(file_path)}")
             
     def browse_output_directory(self):
         """Open directory dialog to select output directory."""
         directory = filedialog.askdirectory(title="Select Output Directory")
         if directory:
             self.output_directory.set(directory)
+            self.log_message(f"📁 Output directory set: {directory}")
             
     def log_message(self, message):
-        """Add a message to the status text area."""
+        """Add a styled message to the status text area with modern formatting."""
+        import datetime
+        
         self.status_text.configure(state='normal')
-        self.status_text.insert(tk.END, f"{message}\n")
+        
+        # Add timestamp
+        timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+        
+        # Configure text tags for styling
+        self.status_text.tag_configure(
+            "timestamp", 
+            foreground=self.COLORS['text_muted'],
+            font=('Consolas', 8)
+        )
+        self.status_text.tag_configure(
+            "success", 
+            foreground=self.COLORS['success'],
+            font=('Consolas', 9, 'bold')
+        )
+        self.status_text.tag_configure(
+            "warning", 
+            foreground=self.COLORS['warning'],
+            font=('Consolas', 9, 'bold')
+        )
+        self.status_text.tag_configure(
+            "error", 
+            foreground=self.COLORS['error'],
+            font=('Consolas', 9, 'bold')
+        )
+        self.status_text.tag_configure(
+            "info", 
+            foreground=self.COLORS['text_primary'],
+            font=('Consolas', 9)
+        )
+        
+        # Insert timestamp
+        self.status_text.insert(tk.END, f"[{timestamp}] ", "timestamp")
+        
+        # Style message based on content
+        if "✅" in message or "success" in message.lower():
+            self.status_text.insert(tk.END, f"{message}\n", "success")
+        elif "⚠️" in message or "warning" in message.lower():
+            self.status_text.insert(tk.END, f"{message}\n", "warning")
+        elif "❌" in message or "error" in message.lower() or "fail" in message.lower():
+            self.status_text.insert(tk.END, f"{message}\n", "error")
+        else:
+            self.status_text.insert(tk.END, f"{message}\n", "info")
+        
         self.status_text.configure(state='disabled')
         self.status_text.see(tk.END)
         self.root.update_idletasks()
@@ -291,8 +891,14 @@ class HighlighterGUI:
                 
                 self.root.after(0, lambda: self.log_message("Analyzing audio characteristics..."))
                 
-                # Analyze audio
-                audio_processor = processor.AudioProcessor(audio_path)
+                # Use streaming or legacy processor based on setting
+                if self.use_streaming.get():
+                    self.root.after(0, lambda: self.log_message("Using streaming processing (memory efficient)..."))
+                    audio_processor = processor.StreamingAudioProcessor(audio_path)
+                else:
+                    self.root.after(0, lambda: self.log_message("Using legacy processing (faster but more memory)..."))
+                    audio_processor = processor.AudioProcessor(audio_path)
+                
                 avg_db = audio_processor.get_avg_decibel()
                 max_db = audio_processor.get_max_decibel()
                 
@@ -454,7 +1060,7 @@ class HighlighterGUI:
                                "• FFmpeg is properly installed")
             
     def start_analysis(self):
-        """Start the highlight analysis process."""
+        """Start the highlight analysis process with modern UI feedback."""
         if self.is_analyzing:
             return
             
@@ -470,14 +1076,17 @@ class HighlighterGUI:
         output_path = pathlib.Path(self.output_directory.get())
         output_path.mkdir(parents=True, exist_ok=True)
         
+        # Update UI for analysis state
         self.is_analyzing = True
         self.analyze_btn.configure(text="⏳ Analyzing...", state='disabled')
-        self.progress_bar.start()
+        self.update_progress_bar_style('indeterminate')
+        self.animate_status_indicator('analyzing')
         
-        self.log_message("Starting highlight analysis...")
-        self.log_message(f"Video: {os.path.basename(self.current_video_path.get())}")
-        self.log_message(f"Output: {self.output_directory.get()}")
-        self.log_message(f"Threshold: {self.decibel_threshold.get():.1f} dB")
+        self.log_message("🚀 Starting highlight analysis...")
+        self.log_message(f"📹 Video: {os.path.basename(self.current_video_path.get())}")
+        self.log_message(f"📁 Output: {self.output_directory.get()}")
+        self.log_message(f"🎯 Threshold: {self.decibel_threshold.get():.1f} dB")
+        self.log_message(f"🔄 Mode: {'Streaming (Memory Efficient)' if self.use_streaming.get() else 'Legacy (Faster)'}")
         
         # Run analysis in separate thread
         self.analysis_thread = threading.Thread(target=self.run_analysis, daemon=True)
@@ -493,14 +1102,26 @@ class HighlighterGUI:
                 self.temp_dir.name
             )
             
-            # Create analyzer
-            self.root.after(0, lambda: self.log_message("Initializing audio analyzer..."))
-            audio_analyzer = analyzer.AudioAnalysis(
-                video_path=self.current_video_path.get(),
-                audio_path=audio_path,
-                output_path=self.output_directory.get(),
-                decibel_threshold=self.decibel_threshold.get()
-            )
+            # Create analyzer based on processing mode
+            self.root.after(0, lambda: self.log_message("Initializing analyzer..."))
+            
+            if self.use_streaming.get():
+                # Use streaming processing
+                audio_processor = processor.StreamingAudioProcessor(audio_path)
+                audio_analyzer = analyzer.StreamingAudioAnalysis(
+                    video_path=self.current_video_path.get(),
+                    audio_processor=audio_processor,
+                    output_path=self.output_directory.get(),
+                    decibel_threshold=self.decibel_threshold.get()
+                )
+            else:
+                # Use legacy processing
+                audio_analyzer = analyzer.AudioAnalysis(
+                    video_path=self.current_video_path.get(),
+                    audio_path=audio_path,
+                    output_path=self.output_directory.get(),
+                    decibel_threshold=self.decibel_threshold.get()
+                )
             
             # Set clip length settings (split total length around highlight moment)
             total_length = self.clip_length.get()
@@ -509,13 +1130,17 @@ class HighlighterGUI:
             
             # Run analysis
             self.root.after(0, lambda: self.log_message("Analyzing audio for highlights..."))
-            audio_analyzer.crest_ceiling_algorithm()
+            
+            if self.use_streaming.get():
+                audio_analyzer.streaming_crest_ceiling_algorithm()
+            else:
+                audio_analyzer.crest_ceiling_algorithm()
             
             # Export results
             self.root.after(0, lambda: self.log_message("Exporting analysis results..."))
             audio_analyzer.export()
             
-            # Generate highlight clips
+            # Generate highlight clips with futuristic animations
             highlight_count = len(audio_analyzer._captured_result)
             self.root.after(0, lambda: self.log_message(f"Found {highlight_count} highlights to process"))
             
@@ -524,8 +1149,17 @@ class HighlighterGUI:
                 self.root.after(0, lambda: self.analysis_complete(0))
                 return
 
-            self.root.after(0, lambda: self.log_message(f"Generating {highlight_count} highlight clips..."))
-            completed_count, failed_count = audio_analyzer.generate_all_highlights()
+            self.root.after(0, lambda: self.log_message(f"🎮 Initializing Highlight Forge v3.0 for {highlight_count} clips..."))
+            
+            # Use optimized generator with animations enabled
+            clip_generator = analyzer.OptimizedClipGenerator(max_workers=4, use_animations=True)
+            completed_count, failed_count = clip_generator.generate_clips_parallel(
+                audio_analyzer._captured_result,
+                self.current_video_path.get(),
+                self.output_directory.get(),
+                audio_analyzer.start_point,
+                audio_analyzer.end_point
+            )
 
             # Report results with actual counts
             self.root.after(0, lambda: self.analysis_complete_with_results(completed_count, failed_count, highlight_count))
@@ -564,12 +1198,17 @@ class HighlighterGUI:
         self.analysis_complete(actual_count)
         
     def analysis_complete_with_results(self, completed_count, failed_count, expected_count):
-        """Handle analysis completion with detailed results."""
+        """Handle analysis completion with detailed results and cyber effects."""
         self.is_analyzing = False
         self.progress_bar.stop()
         self.analyze_btn.configure(text="🎬 Generate Highlights", state='normal')
         
         total_processed = completed_count + failed_count
+        
+        # Show cyber completion effect
+        if completed_count > 0:
+            completion_msg = f"HIGHLIGHT EXTRACTION COMPLETE! {completed_count} clips generated!"
+            self._show_completion_effect(completion_msg)
         
         if failed_count > 0:
             self.log_message(f"✅ Analysis complete! {completed_count} clips generated successfully, {failed_count} failed.")
@@ -594,15 +1233,21 @@ class HighlighterGUI:
                                f"Clips saved to:\n{self.output_directory.get()}")
         
     def analysis_complete(self, highlight_count):
-        """Handle successful analysis completion."""
+        """Handle successful analysis completion with modern UI updates and cyber effects."""
         self.is_analyzing = False
-        self.progress_bar.stop()
+        self.update_progress_bar_style('determinate')
+        self.progress_bar.configure(value=100)
         self.analyze_btn.configure(text="🎬 Generate Highlights", state='normal')
+        self.animate_status_indicator('ready')
         
         self.log_message(f"✅ Analysis complete! Generated {highlight_count} highlight clips.")
-        self.log_message(f"Clips saved to: {self.output_directory.get()}")
+        self.log_message(f"📁 Clips saved to: {self.output_directory.get()}")
         
         if highlight_count > 0:
+            # Show cyber completion effect
+            completion_msg = f"MISSION ACCOMPLISHED! {highlight_count} highlights extracted!"
+            self._show_completion_effect(completion_msg)
+            
             messagebox.showinfo("Analysis Complete", 
                                f"Successfully generated {highlight_count} highlight clips!\n\n"
                                f"Clips saved to:\n{self.output_directory.get()}")
@@ -613,19 +1258,23 @@ class HighlighterGUI:
                                   "to find a better threshold.")
             
     def analysis_failed(self, error_message):
-        """Handle analysis failure."""
+        """Handle analysis failure with modern UI updates."""
         self.is_analyzing = False
-        self.progress_bar.stop()
+        self.update_progress_bar_style('determinate')
+        self.progress_bar.configure(value=0)
         self.analyze_btn.configure(text="🎬 Generate Highlights", state='normal')
+        self.animate_status_indicator('error')
         
         self.log_message(f"❌ Analysis failed: {error_message}")
         messagebox.showerror("Analysis Failed", f"Analysis failed with error:\n\n{error_message}")
         
     def analysis_failed_ffmpeg(self, error_message):
-        """Handle FFmpeg-specific analysis failure."""
+        """Handle FFmpeg-specific analysis failure with modern UI updates."""
         self.is_analyzing = False
-        self.progress_bar.stop()
+        self.update_progress_bar_style('determinate')
+        self.progress_bar.configure(value=0)
         self.analyze_btn.configure(text="🎬 Generate Highlights", state='normal')
+        self.animate_status_indicator('error')
         
         self.log_message(f"❌ FFmpeg Error: {error_message}")
         
@@ -663,8 +1312,10 @@ class HighlighterGUI:
             messagebox.showerror("Folder Not Found", "Output folder does not exist yet.")
             
     def run(self):
-        """Start the GUI application."""
-        self.log_message("Auto Highlighter GUI ready! Drop a video file or click Browse to get started.")
+        """Start the modern GUI application."""
+        self.log_message("� M0 Clipper: Highlight Forge v3.0 initialized!")
+        self.log_message("⚡ Cyber systems online. Drop a video file or click Browse to begin extraction.")
+        self.animate_status_indicator('ready')
         self.root.mainloop()
         
     def __del__(self):
@@ -675,7 +1326,7 @@ class HighlighterGUI:
 
 def main():
     """Main entry point for the GUI application."""
-    app = HighlighterGUI()
+    app = ModernHighlighterGUI()
     app.run()
 
 

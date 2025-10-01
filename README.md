@@ -18,6 +18,8 @@
 - **Reference analysis** for personalized threshold suggestions
 - **Cross-platform**: Windows, macOS, Linux
 - **Robust error handling** and FFmpeg integration
+- **🎮 Futuristic UI**: Cyberpunk-inspired loading animations with ironic gaming quips
+- **⚡ Performance optimized**: Streaming processing for large files, parallel clip generation
 
 ---
 
@@ -59,6 +61,11 @@ python -m highlighter.gui
 ```bash
 python -m highlighter --help
 ```
+
+**New Features:**
+- **Batch processing**: `highlighter batch "*.mp4" ./output --workers 3`
+- **Animation demo**: `highlighter demo` - See the futuristic UI in action!
+- **Streaming mode**: `--streaming` flag for memory-efficient processing of large files
 
 ---
 

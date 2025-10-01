@@ -3,6 +3,8 @@ import librosa
 import numpy as np
 import subprocess
 import sys
+import psutil
+from typing import Generator, Tuple, Optional
 
 from loguru import logger
 
@@ -68,8 +70,126 @@ def extract_audio_from_video(video_path: str, output_path: str):
         logger.error(error_msg)
         raise RuntimeError(error_msg)
     
+
+class StreamingAudioProcessor:
+    """Memory-efficient audio processor that streams chunks instead of loading entire file."""
     
+    def __init__(self, audio_path: str, chunk_duration: float = 30.0):
+        self.audio_path = audio_path
+        self.chunk_duration = chunk_duration
+        
+        # Get metadata without loading the full file
+        self.sample_rate = librosa.get_samplerate(audio_path)
+        self.duration = librosa.get_duration(path=audio_path)
+        self.chunk_samples = int(chunk_duration * self.sample_rate)
+        
+        # Internal state
+        self._current_offset = 0.0
+        
+        logger.info(f'streaming audio processor initialized for {audio_path}')
+        logger.info(f'duration: {self.duration}s, chunk size: {chunk_duration}s')
+        logger.debug(f'sample rate: {self.sample_rate}, chunk samples: {self.chunk_samples}')
+    
+    def stream_chunks(self) -> Generator[Tuple[np.ndarray, float], None, None]:
+        """Generator that yields audio chunks without loading full file into memory."""
+        offset = 0.0
+        
+        while offset < self.duration:
+            # Calculate chunk duration (handle last chunk)
+            remaining_duration = self.duration - offset
+            current_chunk_duration = min(self.chunk_duration, remaining_duration)
+            
+            try:
+                # Load only this chunk
+                chunk, sr = librosa.load(
+                    self.audio_path,
+                    offset=offset,
+                    duration=current_chunk_duration,
+                    mono=True,
+                    sr=self.sample_rate
+                )
+                
+                if chunk.size > 0:  # Only yield non-empty chunks
+                    yield chunk, offset
+                
+                offset += current_chunk_duration
+                
+            except Exception as e:
+                logger.warning(f"Error loading chunk at offset {offset}s: {e}")
+                offset += current_chunk_duration
+                continue
+    
+    def get_memory_usage(self) -> float:
+        """Get current memory usage in MB."""
+        try:
+            process = psutil.Process()
+            return process.memory_info().rss / 1024 / 1024
+        except Exception:
+            return 0.0
+    
+    def decibel_iter(self) -> Generator[Tuple[list, float], None, None]:
+        """Iterate over audio chunks and convert to decibel readings."""
+        for chunk, offset in self.stream_chunks():
+            if chunk.size == 0:
+                continue
+                
+            # Split chunk into smaller segments for analysis
+            segments = np.array_split(chunk, SPLIT_FRAMES)
+            decibels = self._into_decibels(segments)
+            
+            # Yield decibel data for each second in the chunk
+            samples_per_second = self.sample_rate
+            for i, segment in enumerate(segments):
+                if len(decibels) > i:
+                    segment_offset = offset + (i * len(chunk) / len(segments)) / self.sample_rate
+                    yield [decibels[i]], segment_offset
+    
+    def _into_decibels(self, segments):
+        """Convert audio segments into decibels."""
+        decibels = []
+        for segment in segments:
+            if segment.size == 0:
+                decibels.append(-60.0)
+                continue
+                
+            rms = np.sqrt(np.mean(segment ** 2))
+            if rms > 0:
+                db = 20 * np.log10(rms)
+            else:
+                db = -60.0  # Very low dB for silence
+            decibels.append(db)
+        return decibels
+    
+    def get_max_decibel(self) -> float:
+        """Get maximum decibel across entire file (streaming)."""
+        max_db = -np.inf
+        for chunk, _ in self.stream_chunks():
+            if chunk.size > 0:
+                chunk_db = 20 * np.log10(np.maximum(np.sqrt(np.mean(chunk ** 2)), 1e-10))
+                max_db = max(max_db, chunk_db)
+        return max_db
+    
+    def get_avg_decibel(self) -> float:
+        """Get average decibel across entire file (streaming)."""
+        total_rms = 0.0
+        chunk_count = 0
+        
+        for chunk, _ in self.stream_chunks():
+            if chunk.size > 0:
+                chunk_rms = np.sqrt(np.mean(chunk ** 2))
+                total_rms += chunk_rms
+                chunk_count += 1
+        
+        if chunk_count == 0:
+            return -60.0
+            
+        avg_rms = total_rms / chunk_count
+        return 20 * np.log10(max(avg_rms, 1e-10))
+
+
 class AudioProcessor:
+    """Legacy audio processor - loads entire file into memory."""
+    
     def __init__(self, audio_path):
         self.audio, self.sample_rate = librosa.load(audio_path, mono=True, sr=None)
         self.duration = librosa.get_duration(y=self.audio, sr=self.sample_rate)
