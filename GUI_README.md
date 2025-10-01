@@ -63,9 +63,13 @@ python launch_gui.py
 ## Settings Explained
 
 ### Decibel Threshold
-- **Lower values** (e.g., -10.0 dB): More sensitive, captures more moments, may include quieter highlights
-- **Higher values** (e.g., -2.0 dB): Less sensitive, only captures very loud moments, fewer clips
-- **Tip**: Use "Analyze Reference" to find the best threshold for your video
+- **Lower values** (e.g., -20.0 dB): More sensitive, captures more moments, may include quieter highlights
+- **Higher values** (e.g., -5.0 dB): Less sensitive, only captures very loud moments, fewer clips
+- **Recommended approach**: 
+  1. Use "Analyze Reference" to get tailored recommendations
+  2. Start with the "Balanced" option (usually works best for gaming content)
+  3. Adjust based on results - if too many clips, go more Conservative; if too few, go more Aggressive
+- **Gaming content tip**: The old recommendation of `max_dB - 1.4` was too conservative. The new balanced approach typically works much better.
 
 ### Clip Length
 - **Before**: Seconds to include before the highlight moment (default: 20)

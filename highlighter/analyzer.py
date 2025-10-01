@@ -33,10 +33,17 @@ class AudioAnalysis:
         self._subprocesses = []
     
     def _already_captured(self, pos: int):
-        if not any(previous in self._recent for previous in range(pos - self.start_point, pos + self.end_point)):
-            self._recent = np.append(self._recent, pos)
-            return False
-        return True
+        """
+        Check if this position would overlap with existing clips.
+        Uses dynamic gap calculation based on clip length.
+        """
+        min_gap = max(30, self.start_point + self.end_point)  # Minimum gap between clips
+        
+        # Check if any existing highlight is too close
+        for existing_pos in self._captured_result.keys():
+            if abs(int(existing_pos) - pos) < min_gap:
+                return True
+        return False
     
     def _add_highlight(self, position: int, decibel: float):
         highlight = common.HighlightedMoment(position=str(datetime.timedelta(seconds=position)), decibel=decibel)
@@ -79,7 +86,20 @@ class AudioAnalysis:
                 
     
     def crest_ceiling_algorithm(self):
+        """
+        Enhanced clipping algorithm with better intelligence.
+        Features:
+        - Prevents overlapping clips
+        - Considers sustained loud moments vs brief spikes
+        - Uses rolling average for better noise rejection
+        """
         data = iter(self._processor.decibel_iter())
+        
+        # Enhanced parameters for better detection
+        min_gap_between_clips = max(30, self.start_point + self.end_point)  # Minimum gap between clips
+        sustained_threshold_duration = 3  # Require 3+ seconds above threshold for sustained moments
+        rolling_window = []
+        rolling_window_size = 5  # 5-second rolling window
         
         t0 = time.time()
         with AudioAnalysisProgress(console=console, transient=True, refresh_per_second=60) as progress:
@@ -90,17 +110,50 @@ class AudioAnalysis:
                 position = point[1]
                 
                 max_decibel = np.max(decibel_array)
+                avg_decibel = np.mean(decibel_array)
                 
+                # Update rolling window
+                rolling_window.append({
+                    'position': position,
+                    'max_db': max_decibel,
+                    'avg_db': avg_decibel
+                })
+                
+                # Keep rolling window at specified size
+                if len(rolling_window) > rolling_window_size:
+                    rolling_window.pop(0)
+                
+                # Check if current moment exceeds threshold
                 if max_decibel >= self.decibel_threshold:
                     if not self._already_captured(int(position)):
-                        self._add_highlight(int(position), max_decibel)
+                        # Enhanced detection: check for sustained loud moments
+                        sustained_count = sum(1 for w in rolling_window if w['max_db'] >= self.decibel_threshold)
+                        
+                        # Decide highlight strength
+                        if sustained_count >= sustained_threshold_duration:
+                            # Strong highlight: sustained loud moment
+                            self._add_highlight(int(position), max_decibel)
+                            logger.debug(f"Strong highlight at {position}s: {max_decibel:.1f}dB (sustained)")
+                        elif max_decibel >= (self.decibel_threshold + 3):
+                            # Spike highlight: very loud brief moment
+                            self._add_highlight(int(position), max_decibel)
+                            logger.debug(f"Spike highlight at {position}s: {max_decibel:.1f}dB (spike)")
+                        else:
+                            # Potential highlight: check if it's significantly above rolling average
+                            if len(rolling_window) >= 3:
+                                rolling_avg = np.mean([w['avg_db'] for w in rolling_window])
+                                if max_decibel >= (rolling_avg + 6):  # 6dB above rolling average
+                                    self._add_highlight(int(position), max_decibel)
+                                    logger.debug(f"Dynamic highlight at {position}s: {max_decibel:.1f}dB (above rolling avg)")
+                        
                         progress.update(task, description=f'[dim]captured[/] [yellow bold]{len(self._captured_result)}[/] [dim]highlights so far ...')
                 
                 progress.update(task, advance=1.0)
+                
             progress.update(task, completed=True)
             progress.remove_task(task)
         t1 = time.time()
-        logger.info(f'analysis completed in {t1 - t0}s')
+        logger.info(f'enhanced analysis completed in {t1 - t0}s with {len(self._captured_result)} highlights')
             
     def export(self):
         filename = os.path.join(self.output_path, 'index.json')

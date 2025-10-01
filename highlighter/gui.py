@@ -42,9 +42,8 @@ class HighlighterGUI:
         # Variables
         self.current_video_path = tk.StringVar()
         self.output_directory = tk.StringVar(value=os.path.join(os.getcwd(), "highlights"))
-        self.decibel_threshold = tk.DoubleVar(value=-5.0)
-        self.clip_start_buffer = tk.IntVar(value=20)
-        self.clip_end_buffer = tk.IntVar(value=20)
+        self.decibel_threshold = tk.DoubleVar(value=-15.0)  # More reasonable default for gaming
+        self.clip_length = tk.IntVar(value=30)  # Total clip length in seconds
         self.verbose_logging = tk.BooleanVar(value=False)
         
         # Analysis state
@@ -171,18 +170,15 @@ class HighlighterGUI:
         
         current_row += 1
         
-        # Clip length settings
-        ttk.Label(settings_frame, text="Clip length (seconds):").grid(row=current_row, column=0, sticky=tk.W, pady=(5, 0))
+        # Clip length setting
+        ttk.Label(settings_frame, text="Clip length:").grid(row=current_row, column=0, sticky=tk.W, pady=(5, 0))
         clip_frame = ttk.Frame(settings_frame)
         clip_frame.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(5, 0), pady=(5, 0))
         
-        ttk.Label(clip_frame, text="Before:").grid(row=0, column=0)
-        before_spin = ttk.Spinbox(clip_frame, from_=5, to=60, width=8, textvariable=self.clip_start_buffer)
-        before_spin.grid(row=0, column=1, padx=(2, 10))
+        clip_spin = ttk.Spinbox(clip_frame, from_=10, to=120, width=8, textvariable=self.clip_length)
+        clip_spin.grid(row=0, column=0)
         
-        ttk.Label(clip_frame, text="After:").grid(row=0, column=2)
-        after_spin = ttk.Spinbox(clip_frame, from_=5, to=60, width=8, textvariable=self.clip_end_buffer)
-        after_spin.grid(row=0, column=3, padx=(2, 0))
+        ttk.Label(clip_frame, text="seconds (centered on highlight)").grid(row=0, column=1, padx=(5, 0))
         
         current_row += 1
         
@@ -299,10 +295,28 @@ class HighlighterGUI:
                 audio_processor = processor.AudioProcessor(audio_path)
                 avg_db = audio_processor.get_avg_decibel()
                 max_db = audio_processor.get_max_decibel()
-                recommended_threshold = max_db - 1.4
+                
+                # Better threshold calculation for gaming content
+                # Use multiple recommendations based on content type
+                db_range = max_db - avg_db
+                
+                # Conservative (fewer clips, only very loud moments)
+                conservative_threshold = max_db - 2.0
+                
+                # Balanced (good for most gaming content)
+                balanced_threshold = avg_db + (db_range * 0.6)
+                
+                # Aggressive (more clips, catches quieter highlights)
+                aggressive_threshold = avg_db + (db_range * 0.4)
+                
+                # Default to balanced
+                recommended_threshold = balanced_threshold
                 
                 # Update UI in main thread
-                self.root.after(0, lambda: self.show_reference_results(avg_db, max_db, recommended_threshold))
+                self.root.after(0, lambda: self.show_reference_results(
+                    avg_db, max_db, recommended_threshold, 
+                    conservative_threshold, balanced_threshold, aggressive_threshold
+                ))
                 
             except RuntimeError as e:
                 error_msg = str(e)
@@ -315,18 +329,109 @@ class HighlighterGUI:
         thread = threading.Thread(target=run_reference_analysis, daemon=True)
         thread.start()
         
-    def show_reference_results(self, avg_db, max_db, recommended_threshold):
-        """Show reference analysis results."""
+    def show_reference_results(self, avg_db, max_db, recommended_threshold, 
+                               conservative_threshold, balanced_threshold, aggressive_threshold):
+        """Show reference analysis results with multiple threshold options."""
         self.log_message(f"Reference Analysis Complete:")
         self.log_message(f"  Average Decibel: {avg_db:.1f} dB")
         self.log_message(f"  Maximum Decibel: {max_db:.1f} dB")
-        self.log_message(f"  Recommended Threshold: {recommended_threshold:.1f} dB")
+        self.log_message(f"  Dynamic Range: {max_db - avg_db:.1f} dB")
+        self.log_message("")
+        self.log_message("Threshold Recommendations:")
+        self.log_message(f"  🎯 Balanced (Recommended): {balanced_threshold:.1f} dB")
+        self.log_message(f"  🔒 Conservative (Fewer clips): {conservative_threshold:.1f} dB") 
+        self.log_message(f"  🔓 Aggressive (More clips): {aggressive_threshold:.1f} dB")
         
-        # Ask if user wants to use recommended threshold
-        if messagebox.askyesno("Use Recommended Threshold?", 
-                              f"Use recommended threshold of {recommended_threshold:.1f} dB?"):
-            self.decibel_threshold.set(recommended_threshold)
-            self.threshold_label.configure(text=f"{recommended_threshold:.1f} dB")
+        # Create a custom dialog with multiple options
+        self.show_threshold_options_dialog(
+            balanced_threshold, conservative_threshold, aggressive_threshold
+        )
+            
+    def show_threshold_options_dialog(self, balanced, conservative, aggressive):
+        """Show dialog with multiple threshold options."""
+        import tkinter as tk
+        from tkinter import ttk
+        
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Choose Threshold Setting")
+        dialog.geometry("450x300")
+        dialog.resizable(False, False)
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        # Center the dialog
+        dialog.update_idletasks()
+        x = (dialog.winfo_screenwidth() // 2) - (450 // 2)
+        y = (dialog.winfo_screenheight() // 2) - (300 // 2)
+        dialog.geometry(f"450x300+{x}+{y}")
+        
+        main_frame = ttk.Frame(dialog, padding="20")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        ttk.Label(main_frame, text="Select Threshold Setting", 
+                 font=('TkDefaultFont', 12, 'bold')).pack(pady=(0, 15))
+        
+        # Threshold options
+        threshold_var = tk.StringVar(value="balanced")
+        
+        options_frame = ttk.Frame(main_frame)
+        options_frame.pack(fill=tk.X, pady=(0, 20))
+        
+        # Balanced option (recommended)
+        balanced_frame = ttk.Frame(options_frame)
+        balanced_frame.pack(fill=tk.X, pady=5)
+        ttk.Radiobutton(balanced_frame, text=f"🎯 Balanced: {balanced:.1f} dB (Recommended)", 
+                       variable=threshold_var, value="balanced").pack(anchor=tk.W)
+        ttk.Label(balanced_frame, text="Good balance for most gaming content", 
+                 foreground="gray", font=('TkDefaultFont', 9)).pack(anchor=tk.W, padx=(20, 0))
+        
+        # Conservative option
+        conservative_frame = ttk.Frame(options_frame)
+        conservative_frame.pack(fill=tk.X, pady=5)
+        ttk.Radiobutton(conservative_frame, text=f"🔒 Conservative: {conservative:.1f} dB", 
+                       variable=threshold_var, value="conservative").pack(anchor=tk.W)
+        ttk.Label(conservative_frame, text="Fewer clips, only very loud moments", 
+                 foreground="gray", font=('TkDefaultFont', 9)).pack(anchor=tk.W, padx=(20, 0))
+        
+        # Aggressive option
+        aggressive_frame = ttk.Frame(options_frame)
+        aggressive_frame.pack(fill=tk.X, pady=5)
+        ttk.Radiobutton(aggressive_frame, text=f"🔓 Aggressive: {aggressive:.1f} dB", 
+                       variable=threshold_var, value="aggressive").pack(anchor=tk.W)
+        ttk.Label(aggressive_frame, text="More clips, catches quieter highlights", 
+                 foreground="gray", font=('TkDefaultFont', 9)).pack(anchor=tk.W, padx=(20, 0))
+        
+        # Manual option
+        manual_frame = ttk.Frame(options_frame)
+        manual_frame.pack(fill=tk.X, pady=5)
+        ttk.Radiobutton(manual_frame, text="✏️ Keep current setting", 
+                       variable=threshold_var, value="manual").pack(anchor=tk.W)
+        ttk.Label(manual_frame, text=f"Use current threshold: {self.decibel_threshold.get():.1f} dB", 
+                 foreground="gray", font=('TkDefaultFont', 9)).pack(anchor=tk.W, padx=(20, 0))
+        
+        # Buttons
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack(fill=tk.X, pady=(10, 0))
+        
+        def apply_threshold():
+            choice = threshold_var.get()
+            if choice == "balanced":
+                new_threshold = balanced
+            elif choice == "conservative":
+                new_threshold = conservative
+            elif choice == "aggressive":
+                new_threshold = aggressive
+            else:  # manual
+                dialog.destroy()
+                return
+                
+            self.decibel_threshold.set(new_threshold)
+            self.threshold_label.configure(text=f"{new_threshold:.1f} dB")
+            self.log_message(f"✅ Threshold updated to {new_threshold:.1f} dB ({choice})")
+            dialog.destroy()
+        
+        ttk.Button(button_frame, text="Apply", command=apply_threshold).pack(side=tk.RIGHT, padx=(5, 0))
+        ttk.Button(button_frame, text="Cancel", command=dialog.destroy).pack(side=tk.RIGHT)
             
     def show_ffmpeg_error(self, error_msg):
         """Show FFmpeg-specific error with helpful guidance."""
@@ -397,9 +502,10 @@ class HighlighterGUI:
                 decibel_threshold=self.decibel_threshold.get()
             )
             
-            # Set clip length settings
-            audio_analyzer.start_point = self.clip_start_buffer.get()
-            audio_analyzer.end_point = self.clip_end_buffer.get()
+            # Set clip length settings (split total length around highlight moment)
+            total_length = self.clip_length.get()
+            audio_analyzer.start_point = total_length // 2  # Half before
+            audio_analyzer.end_point = total_length - audio_analyzer.start_point  # Half after (handles odd numbers)
             
             # Run analysis
             self.root.after(0, lambda: self.log_message("Analyzing audio for highlights..."))

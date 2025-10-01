@@ -49,9 +49,26 @@ Here are some statistics from the reference video:
 
 - **Average Decibel**: {audio.get_avg_decibel()} dB
 - **Maximum Decibel**: {audio.get_max_decibel()} dB
+- **Dynamic Range**: {audio.get_max_decibel() - audio.get_avg_decibel():.1f} dB
 
-It is generally recommended to set the decibel threshold for analysis right below 
-the maximum decibel. Start off with a value like *{audio.get_max_decibel() - 1.4}* dB.
+## Threshold Recommendations
+
+The original recommendation of `max_db - 1.4` tends to be too conservative for gaming content.
+Here are better options based on your audio characteristics:
+
+- **🎯 Balanced (Recommended)**: *{audio.get_avg_decibel() + (audio.get_max_decibel() - audio.get_avg_decibel()) * 0.6:.1f}* dB
+  - Good balance for most gaming content
+  - Catches significant moments without too much noise
+
+- **🔒 Conservative**: *{audio.get_max_decibel() - 2.0:.1f}* dB  
+  - Fewer clips, only very loud moments
+  - Use if you want only the most dramatic highlights
+
+- **🔓 Aggressive**: *{audio.get_avg_decibel() + (audio.get_max_decibel() - audio.get_avg_decibel()) * 0.4:.1f}* dB
+  - More clips, catches quieter highlights  
+  - Use if you want to catch subtle but important moments
+
+**Tip**: Start with the Balanced setting and adjust based on results!
     """
     console.print(Markdown(markdown))
     
