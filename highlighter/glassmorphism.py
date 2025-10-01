@@ -308,8 +308,14 @@ class GlassPanel(tk.Frame):
             relief='flat',
             bd=0
         )
-        self.content_frame.pack(fill=tk.BOTH, expand=True, padx=16, pady=16)
+        self.content_frame.grid(row=0, column=0, sticky="nsew", padx=1, pady=1)
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
         
+        # The content_frame will now manage its children with grid
+        self.content_frame.rowconfigure(1, weight=1)
+        self.content_frame.columnconfigure(0, weight=1)
+
         # Add title if provided
         if self.title:
             self.title_label = tk.Label(
@@ -320,7 +326,7 @@ class GlassPanel(tk.Frame):
                 font=self.theme.fonts['heading'],
                 anchor='w'
             )
-            self.title_label.pack(fill=tk.X, pady=(0, 12))
+            self.title_label.grid(row=0, column=0, sticky="ew", padx=15, pady=(15, 10))
     
     def bind_hover_events(self):
         """Bind hover events for glass effects."""
