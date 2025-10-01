@@ -84,8 +84,8 @@ Here are better options based on your audio characteristics:
     console.print(Markdown(markdown))
     
 
-@app.command()
-def gui():
+@app.command(name="gui")
+def launch_gui():
     """Launch the graphical user interface."""
     try:
         gui.main()

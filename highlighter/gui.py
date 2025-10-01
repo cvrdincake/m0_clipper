@@ -22,32 +22,23 @@ except ImportError:
 from . import analyzer, processor
 from .common import similarity
 from .animations import show_boot_sequence, show_glitch_effect
+from .glassmorphism import GlassmorphismTheme, GlassPanel, GlassButton, AnimationManager
+from .window_effects import WindowEffects, GlassmorphismNotification
 from rich.console import Console
 
 
 class ModernHighlighterGUI:
     """Professional glassmorphism GUI for M0 Clipper."""
     
-    # Glassmorphism Color Palette
-    COLORS = {
-        'bg_primary': '#0F0F0F',        # Deep black background
-        'bg_secondary': '#1A1A1A',      # Secondary black
-        'bg_glass': '#1F1F1F',          # Glass panel background
-        'bg_glass_hover': '#2A2A2A',    # Glass panel hover
-        'accent': '#FFFFFF',            # Pure white accent
-        'accent_dim': '#E0E0E0',        # Dimmed white
-        'text_primary': '#FFFFFF',      # Primary text
-        'text_secondary': '#B0B0B0',    # Secondary text
-        'text_muted': '#808080',        # Muted text
-        'border': '#333333',            # Border color
-        'border_focus': '#505050',      # Focused border
-        'success': '#00FF88',           # Success green
-        'warning': '#FFAA00',           # Warning orange
-        'error': '#FF4444',             # Error red
-        'glass_alpha': '80'             # Transparency for glass effects
-    }
-    
+    # Ultra-modern Glassmorphism Theme
     def __init__(self):
+        # Initialize glassmorphism theme
+        self.glass_theme = GlassmorphismTheme()
+        self.colors = self.glass_theme.colors
+        self.animation_manager = AnimationManager(self.glass_theme)
+        self.window_effects = None
+        self.notifications = None
+    
         # Create main window with drag-and-drop support
         if DND_AVAILABLE:
             self.root = TkinterDnD.Tk()
@@ -55,12 +46,19 @@ class ModernHighlighterGUI:
             self.root = tk.Tk()
             
         self.root.title("M0 Clipper - Professional Highlight Generator")
-        self.root.geometry("900x700")
-        self.root.minsize(800, 600)
-        self.root.configure(bg=self.COLORS['bg_primary'])
+        self.root.geometry("1000x800")
+        self.root.minsize(900, 700)
+        self.root.configure(bg=self.colors.deep_black)
         
-        # Configure modern styling
-        self.setup_modern_styles()
+        # Initialize window effects
+        self.window_effects = WindowEffects(self.root)
+        self.notifications = GlassmorphismNotification(self.root)
+        
+        # Enable modern window effects
+        self.enable_glassmorphism_effects()
+        
+        # Configure ultra-modern styling
+        self.setup_glassmorphism_styles()
         
         # Variables
         self.current_video_path = tk.StringVar()
@@ -81,8 +79,44 @@ class ModernHighlighterGUI:
         
         self.setup_modern_ui()
         
-        # Show cyber boot sequence on startup
-        self._show_startup_sequence()
+    def enable_glassmorphism_effects(self):
+        """Enable advanced glassmorphism window effects."""
+        try:
+            # Enable blur effect
+            self.window_effects.enable_blur_effect("acrylic")
+            
+            # Set window transparency
+            self.window_effects.set_window_transparency(0.96)
+            
+            # Add drop shadow
+            self.window_effects.add_drop_shadow()
+            
+        except Exception as e:
+            # Graceful fallback if effects aren't supported
+            print(f"Advanced window effects not available: {e}")
+    
+    def setup_glassmorphism_styles(self):
+        """Configure ultra-modern glassmorphism styling."""
+        self.style = ttk.Style()
+        
+        # Apply glassmorphism theme
+        self.glass_theme.create_glass_style(self.style)
+        
+        # Configure dark theme base
+        self.style.theme_use('clam')
+    
+    def create_glass_panel(self, parent, title: str = "", **kwargs) -> GlassPanel:
+        """Create a new glassmorphism panel."""
+        return GlassPanel(parent, self.glass_theme, title, **kwargs)
+    
+    def create_glass_button(self, parent, text: str = "", command=None, style: str = "primary", **kwargs) -> GlassButton:
+        """Create a new glassmorphism button."""
+        return GlassButton(parent, self.glass_theme, text, command, style, **kwargs)
+    
+    def show_notification(self, title: str, message: str, type: str = "info"):
+        """Show a glassmorphism notification."""
+        if self.notifications:
+            self.notifications.show_notification(title, message, type)
         
     def _show_startup_sequence(self):
         """Show futuristic startup sequence in console."""
@@ -109,249 +143,815 @@ class ModernHighlighterGUI:
             # Graceful fallback if animations fail
             pass
     
-    def setup_modern_styles(self):
-        """Configure modern glassmorphism styling."""
-        self.style = ttk.Style()
-        
-        # Configure dark theme base
-        self.style.theme_use('clam')
-        
-        # Glass Panel Style
-        self.style.configure(
-            'Glass.TFrame',
-            background=self.COLORS['bg_glass'],
-            relief='flat',
-            borderwidth=1
-        )
-        
-        # Modern Button Styles
-        self.style.configure(
-            'Modern.TButton',
-            background=self.COLORS['bg_glass'],
-            foreground=self.COLORS['text_primary'],
-            borderwidth=1,
-            relief='flat',
-            font=('Segoe UI', 10, 'normal'),
-            padding=(20, 10)
-        )
-        
-        self.style.configure(
-            'Accent.TButton',
-            background=self.COLORS['accent'],
-            foreground=self.COLORS['bg_primary'],
-            borderwidth=0,
-            relief='flat',
-            font=('Segoe UI', 11, 'bold'),
-            padding=(25, 12)
-        )
-        
-        # Modern Entry Style
-        self.style.configure(
-            'Modern.TEntry',
-            fieldbackground=self.COLORS['bg_glass'],
-            foreground=self.COLORS['text_primary'],
-            borderwidth=1,
-            relief='flat',
-            insertcolor=self.COLORS['accent']
-        )
-        
-        # Modern Label Styles
-        self.style.configure(
-            'Title.TLabel',
-            background=self.COLORS['bg_primary'],
-            foreground=self.COLORS['accent'],
-            font=('Segoe UI', 24, 'bold')
-        )
-        
-        self.style.configure(
-            'Subtitle.TLabel',
-            background=self.COLORS['bg_primary'],
-            foreground=self.COLORS['text_secondary'],
-            font=('Segoe UI', 12, 'normal')
-        )
-        
-        self.style.configure(
-            'Glass.TLabel',
-            background=self.COLORS['bg_glass'],
-            foreground=self.COLORS['text_primary'],
-            font=('Segoe UI', 10, 'normal')
-        )
-        
-        self.style.configure(
-            'GlassSecondary.TLabel',
-            background=self.COLORS['bg_glass'],
-            foreground=self.COLORS['text_secondary'],
-            font=('Segoe UI', 9, 'normal')
-        )
-        
-        # Modern LabelFrame Style
-        self.style.configure(
-            'Glass.TLabelframe',
-            background=self.COLORS['bg_glass'],
-            foreground=self.COLORS['text_primary'],
-            borderwidth=1,
-            relief='flat'
-        )
-        
-        self.style.configure(
-            'Glass.TLabelframe.Label',
-            background=self.COLORS['bg_glass'],
-            foreground=self.COLORS['accent'],
-            font=('Segoe UI', 11, 'bold')
-        )
-        
-        # Modern Scale Style
-        self.style.configure(
-            'Modern.Horizontal.TScale',
-            background=self.COLORS['bg_glass'],
-            troughcolor=self.COLORS['bg_secondary'],
-            borderwidth=0,
-            lightcolor=self.COLORS['accent'],
-            darkcolor=self.COLORS['accent']
-        )
-        
-        # Modern Progressbar Style
-        self.style.configure(
-            'Modern.Horizontal.TProgressbar',
-            background=self.COLORS['accent'],
-            troughcolor=self.COLORS['bg_secondary'],
-            borderwidth=0,
-            lightcolor=self.COLORS['accent'],
-            darkcolor=self.COLORS['accent']
-        )
+
         
     def setup_modern_ui(self):
-        """Set up the modern glassmorphism user interface."""
-        # Main container with padding
-        main_container = tk.Frame(self.root, bg=self.COLORS['bg_primary'])
-        main_container.pack(fill=tk.BOTH, expand=True, padx=30, pady=30)
+        """Set up the ultra-modern glassmorphism user interface."""
+        # Main container with enhanced padding and background
+        main_container = tk.Frame(self.root, bg=self.colors.deep_black)
+        main_container.pack(fill=tk.BOTH, expand=True, padx=24, pady=24)
         
-        # Configure grid weights
+        # Configure grid weights for responsive design
         main_container.columnconfigure(0, weight=1)
         main_container.rowconfigure(1, weight=1)
         
-        # Header section
-        self.setup_header(main_container)
+        # Enhanced header section with glassmorphism
+        self.setup_glassmorphism_header(main_container)
         
-        # Content area with glass panels
-        content_frame = tk.Frame(main_container, bg=self.COLORS['bg_primary'])
-        content_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(20, 0))
+        # Content area with ultra-modern glass panels
+        content_frame = tk.Frame(main_container, bg=self.colors.deep_black)
+        content_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(24, 0))
         content_frame.columnconfigure(0, weight=1)
         content_frame.rowconfigure(2, weight=1)
         
-        # Video input panel
-        self.setup_video_input_panel(content_frame)
+        # Video input panel with enhanced glassmorphism
+        self.setup_glassmorphism_video_input(content_frame)
         
-        # Settings panel
-        self.setup_settings_panel(content_frame)
+        # Settings panel with modern styling
+        self.setup_glassmorphism_settings(content_frame)
         
-        # Progress panel
-        self.setup_progress_panel(content_frame)
+        # Progress panel with advanced animations
+        self.setup_glassmorphism_progress(content_frame)
         
-        # Control panel
-        self.setup_control_panel(content_frame)
+        # Control panel with ultra-modern buttons
+        self.setup_glassmorphism_controls(content_frame)
         
-    def setup_header(self, parent):
-        """Set up the modern header section."""
-        header_frame = tk.Frame(parent, bg=self.COLORS['bg_primary'])
-        header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
-        header_frame.columnconfigure(1, weight=1)
+    def setup_glassmorphism_header(self, parent):
+        """Set up the ultra-modern glassmorphism header section."""
+        # Create glass header panel
+        header_panel = self.create_glass_panel(parent)
+        header_panel.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 16))
+        header_panel.content_frame.columnconfigure(1, weight=1)
         
-        # App icon/logo area
-        icon_frame = tk.Frame(header_frame, bg=self.COLORS['bg_primary'], width=60, height=60)
+        # App icon with modern design
+        icon_frame = tk.Frame(
+            header_panel.content_frame, 
+            bg=self.colors.glass_primary,
+            width=64, 
+            height=64
+        )
         icon_frame.grid(row=0, column=0, padx=(0, 20), sticky=tk.W)
         icon_frame.grid_propagate(False)
         
-        # Icon placeholder (you can add an actual icon here)
+        # Enhanced icon with glassmorphism effect
+        icon_container = tk.Frame(
+            icon_frame,
+            bg=self.colors.glass_secondary,
+            relief='flat',
+            bd=1,
+            highlightbackground=self.colors.border_subtle,
+            highlightthickness=1
+        )
+        icon_container.place(relwidth=1, relheight=1)
+        
         icon_label = tk.Label(
-            icon_frame, 
+            icon_container, 
             text="🎬", 
-            bg=self.COLORS['bg_primary'],
-            fg=self.COLORS['accent'],
-            font=('Segoe UI', 32)
+            bg=self.colors.glass_secondary,
+            fg=self.colors.pure_white,
+            font=('Inter', 28)
         )
         icon_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
         
-        # Title and subtitle
-        title_frame = tk.Frame(header_frame, bg=self.COLORS['bg_primary'])
+        # Title and subtitle with modern typography
+        title_frame = tk.Frame(header_panel.content_frame, bg=self.colors.glass_primary)
         title_frame.grid(row=0, column=1, sticky=(tk.W, tk.E))
         
-        title_label = ttk.Label(
+        title_label = tk.Label(
             title_frame, 
             text="M0 Clipper", 
-            style='Title.TLabel'
+            bg=self.colors.glass_primary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['title'],
+            anchor='w'
         )
         title_label.grid(row=0, column=0, sticky=tk.W)
         
-        subtitle_label = ttk.Label(
+        subtitle_label = tk.Label(
             title_frame, 
-            text="Professional Highlight Generator v0.2.0", 
-            style='Subtitle.TLabel'
+            text="Professional Highlight Generator v3.0", 
+            bg=self.colors.glass_primary,
+            fg=self.colors.soft_white,
+            font=self.glass_theme.fonts['subtitle'],
+            anchor='w'
         )
-        subtitle_label.grid(row=1, column=0, sticky=tk.W)
+        subtitle_label.grid(row=1, column=0, sticky=tk.W, pady=(4, 0))
         
-        # Status indicator
+        # Status indicator with glassmorphism effect
+        status_frame = tk.Frame(
+            header_panel.content_frame,
+            bg=self.colors.glass_primary,
+            width=120,
+            height=40
+        )
+        status_frame.grid(row=0, column=2, padx=(20, 0))
+        status_frame.grid_propagate(False)
+        
+        status_container = tk.Frame(
+            status_frame,
+            bg=self.colors.glass_secondary,
+            relief='flat',
+            bd=1,
+            highlightbackground=self.colors.border_subtle,
+            highlightthickness=1
+        )
+        status_container.place(relwidth=1, relheight=1)
+        
+        # Status text and indicator
+        status_content = tk.Frame(status_container, bg=self.colors.glass_secondary)
+        status_content.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
         self.status_indicator = tk.Label(
-            header_frame,
+            status_content,
             text="●",
-            bg=self.COLORS['bg_primary'],
-            fg=self.COLORS['success'],
-            font=('Segoe UI', 16)
+            bg=self.colors.glass_secondary,
+            fg=self.colors.success,
+            font=('Inter', 12, 'bold')
         )
-        self.status_indicator.grid(row=0, column=2, padx=(20, 0))
+        self.status_indicator.pack(side=tk.LEFT, padx=(8, 4))
         
-    def setup_video_input_panel(self, parent):
-        """Set up the modern video input panel with glassmorphism."""
-        # Glass panel container
+        self.status_text = tk.Label(
+            status_content,
+            text="Ready",
+            bg=self.colors.glass_secondary,
+            fg=self.colors.pure_white,
+            font=('Inter', 10, 'bold')
+        )
+        self.status_text.pack(side=tk.LEFT, padx=(0, 8))
+        
+    def setup_glassmorphism_video_input(self, parent):
+        """Set up the ultra-modern video input panel with glassmorphism."""
+        # Create main glass panel
         panel = self.create_glass_panel(parent, "Video Input")
-        panel.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
+        panel.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 16))
         
-        # Modern drag and drop area
+        # Enhanced drag and drop area
         if DND_AVAILABLE:
-            self.drop_area = self.create_modern_drop_area(panel)
-            self.drop_area.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 15))
+            self.drop_area = self.create_glassmorphism_drop_area(panel.content_frame)
+            self.drop_area.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 16))
         else:
-            self.drop_area = self.create_fallback_area(panel)
-            self.drop_area.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 15))
+            self.drop_area = self.create_glassmorphism_fallback_area(panel.content_frame)
+            self.drop_area.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 16))
         
-        # File path display
-        path_frame = tk.Frame(panel, bg=self.COLORS['bg_glass'])
-        path_frame.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
+        # File path display with glassmorphism styling
+        path_frame = tk.Frame(panel.content_frame, bg=self.colors.glass_primary)
+        path_frame.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 12))
         path_frame.columnconfigure(1, weight=1)
         
-        ttk.Label(
+        path_label = tk.Label(
             path_frame, 
-            text="Selected:", 
-            style='Glass.TLabel'
-        ).grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
-        
-        self.file_entry = ttk.Entry(
-            path_frame, 
-            textvariable=self.current_video_path, 
-            state='readonly',
-            style='Modern.TEntry',
-            font=('Segoe UI', 10)
+            text="Selected File:", 
+            bg=self.colors.glass_primary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['body']
         )
-        self.file_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(0, 10))
+        path_label.grid(row=0, column=0, sticky=tk.W, padx=(0, 12))
+        
+        # Enhanced file entry with glassmorphism
+        entry_container = tk.Frame(
+            path_frame,
+            bg=self.colors.glass_secondary,
+            relief='flat',
+            bd=1,
+            highlightbackground=self.colors.border_subtle,
+            highlightthickness=1
+        )
+        entry_container.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(0, 12))
+        
+        self.file_entry = tk.Entry(
+            entry_container,
+            textvariable=self.current_video_path,
+            state='readonly',
+            bg=self.colors.glass_secondary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['body'],
+            relief='flat',
+            bd=0,
+            insertbackground=self.colors.pure_white
+        )
+        self.file_entry.pack(fill=tk.BOTH, expand=True, padx=12, pady=8)
         
         # Modern browse button
-        browse_btn = ttk.Button(
+        browse_btn = self.create_glass_button(
             path_frame,
-            text="Browse",
+            "Browse Files",
             command=self.browse_video_file,
-            style='Modern.TButton'
+            style="secondary"
         )
         browse_btn.grid(row=0, column=2)
         
-    def create_glass_panel(self, parent, title):
-        """Create a glassmorphism panel with title."""
-        panel_frame = ttk.LabelFrame(
-            parent,
-            text=title,
-            style='Glass.TLabelframe',
-            padding=20
+    def create_glassmorphism_drop_area(self, parent):
+        """Create ultra-modern drag and drop area with glassmorphism styling."""
+        drop_container = tk.Frame(parent, bg=self.colors.glass_primary)
+        
+        # Enhanced drop area with glassmorphism effect
+        self.drop_frame = tk.Frame(
+            drop_container,
+            bg=self.colors.glass_secondary,
+            relief='flat',
+            bd=2,
+            highlightbackground=self.colors.border_subtle,
+            highlightthickness=1,
+            height=140
         )
-        return panel_frame
+        self.drop_frame.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
+        self.drop_frame.pack_propagate(False)
+        
+        # Content with enhanced glassmorphism styling
+        content_frame = tk.Frame(self.drop_frame, bg=self.colors.glass_secondary)
+        content_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+        # Enhanced drop icon with glassmorphism background
+        icon_container = tk.Frame(
+            content_frame,
+            bg=self.colors.glass_tertiary,
+            width=60,
+            height=60,
+            relief='flat',
+            bd=1,
+            highlightbackground=self.colors.border_medium,
+            highlightthickness=1
+        )
+        icon_container.pack(pady=(0, 12))
+        icon_container.pack_propagate(False)
+        
+        drop_icon = tk.Label(
+            icon_container,
+            text="⬇️",
+            bg=self.colors.glass_tertiary,
+            fg=self.colors.pure_white,
+            font=('Inter', 24)
+        )
+        drop_icon.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+        # Enhanced text styling
+        drop_label = tk.Label(
+            content_frame,
+            text="Drop video file here or click to browse",
+            bg=self.colors.glass_secondary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['heading']
+        )
+        drop_label.pack(pady=(0, 8))
+        
+        # Supported formats with modern typography
+        formats_label = tk.Label(
+            content_frame,
+            text="Supports: MP4, AVI, MOV, MKV, WebM, and more",
+            bg=self.colors.glass_secondary,
+            fg=self.colors.muted_white,
+            font=self.glass_theme.fonts['caption']
+        )
+        formats_label.pack()
+        
+        # Register drag and drop
+        self.drop_frame.drop_target_register(DND_FILES)
+        self.drop_frame.dnd_bind('<<Drop>>', self.on_file_drop)
+        
+        # Click to browse functionality
+        self.drop_frame.bind("<Button-1>", lambda e: self.browse_video_file())
+        for widget in [content_frame, icon_container, drop_icon, drop_label, formats_label]:
+            widget.bind("<Button-1>", lambda e: self.browse_video_file())
+        
+        # Enhanced hover effects with glassmorphism
+        self.setup_glassmorphism_hover_effects()
+        
+        return drop_container
+    
+    def create_glassmorphism_fallback_area(self, parent):
+        """Create fallback area when drag-and-drop is not available."""
+        fallback_container = tk.Frame(parent, bg=self.colors.glass_primary)
+        
+        fallback_frame = tk.Frame(
+            fallback_container,
+            bg=self.colors.glass_secondary,
+            relief='flat',
+            bd=2,
+            highlightbackground=self.colors.border_subtle,
+            highlightthickness=1,
+            height=140
+        )
+        fallback_frame.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
+        fallback_frame.pack_propagate(False)
+        
+        content_frame = tk.Frame(fallback_frame, bg=self.colors.glass_secondary)
+        content_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+        # Browse icon with glassmorphism
+        icon_container = tk.Frame(
+            content_frame,
+            bg=self.colors.glass_tertiary,
+            width=60,
+            height=60,
+            relief='flat',
+            bd=1,
+            highlightbackground=self.colors.border_medium,
+            highlightthickness=1
+        )
+        icon_container.pack(pady=(0, 12))
+        icon_container.pack_propagate(False)
+        
+        browse_icon = tk.Label(
+            icon_container,
+            text="📁",
+            bg=self.colors.glass_tertiary,
+            fg=self.colors.pure_white,
+            font=('Inter', 24)
+        )
+        browse_icon.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+        browse_label = tk.Label(
+            content_frame,
+            text="Click here to browse for video files",
+            bg=self.colors.glass_secondary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['heading']
+        )
+        browse_label.pack(pady=(0, 8))
+        
+        # Click handler
+        fallback_frame.bind("<Button-1>", lambda e: self.browse_video_file())
+        for widget in [content_frame, icon_container, browse_icon, browse_label]:
+            widget.bind("<Button-1>", lambda e: self.browse_video_file())
+            
+        return fallback_container
+    
+    def setup_glassmorphism_hover_effects(self):
+        """Set up enhanced hover effects for the drop area."""
+        def on_enter(event):
+            self.drop_frame.configure(
+                bg=self.colors.glass_hover,
+                highlightbackground=self.colors.border_medium
+            )
+            # Animate with glassmorphism effect
+            self.animation_manager.morphing_transition(
+                self.drop_frame, 
+                self.colors.glass_hover,
+                duration=150
+            )
+            
+        def on_leave(event):
+            self.drop_frame.configure(
+                bg=self.colors.glass_secondary,
+                highlightbackground=self.colors.border_subtle
+            )
+            # Animate back to normal
+            self.animation_manager.morphing_transition(
+                self.drop_frame, 
+                self.colors.glass_secondary,
+                duration=150
+            )
+            
+        self.drop_frame.bind("<Enter>", on_enter)
+        self.drop_frame.bind("<Leave>", on_leave)
+    
+    def setup_glassmorphism_settings(self, parent):
+        """Set up the ultra-modern settings panel with glassmorphism."""
+        panel = self.create_glass_panel(parent, "Analysis Settings")
+        panel.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 16))
+        panel.content_frame.columnconfigure(1, weight=1)
+        
+        current_row = 0
+        
+        # Output directory with enhanced styling
+        output_label = tk.Label(
+            panel.content_frame, 
+            text="Output Directory:", 
+            bg=self.colors.glass_primary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['body']
+        )
+        output_label.grid(row=current_row, column=0, sticky=tk.W, pady=(0, 12))
+        
+        output_frame = tk.Frame(panel.content_frame, bg=self.colors.glass_primary)
+        output_frame.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(16, 0), pady=(0, 12))
+        output_frame.columnconfigure(0, weight=1)
+        
+        # Enhanced output entry with glassmorphism
+        output_container = tk.Frame(
+            output_frame,
+            bg=self.colors.glass_secondary,
+            relief='flat',
+            bd=1,
+            highlightbackground=self.colors.border_subtle,
+            highlightthickness=1
+        )
+        output_container.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 12))
+        
+        self.output_entry = tk.Entry(
+            output_container,
+            textvariable=self.output_directory,
+            bg=self.colors.glass_secondary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['body'],
+            relief='flat',
+            bd=0,
+            insertbackground=self.colors.pure_white
+        )
+        self.output_entry.pack(fill=tk.BOTH, expand=True, padx=12, pady=8)
+        
+        output_browse_btn = self.create_glass_button(
+            output_frame,
+            "Browse",
+            command=self.browse_output_directory,
+            style="secondary"
+        )
+        output_browse_btn.grid(row=0, column=1)
+        
+        current_row += 1
+        
+        # Enhanced threshold settings
+        threshold_label = tk.Label(
+            panel.content_frame, 
+            text="Detection Threshold:", 
+            bg=self.colors.glass_primary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['body']
+        )
+        threshold_label.grid(row=current_row, column=0, sticky=tk.W, pady=(12, 0))
+        
+        threshold_container = tk.Frame(panel.content_frame, bg=self.colors.glass_primary)
+        threshold_container.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(16, 0), pady=(12, 0))
+        threshold_container.columnconfigure(0, weight=1)
+        
+        # Modern threshold scale with glassmorphism
+        threshold_frame = tk.Frame(threshold_container, bg=self.colors.glass_primary)
+        threshold_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 8))
+        threshold_frame.columnconfigure(0, weight=1)
+        
+        # Custom scale with glassmorphism styling
+        scale_container = tk.Frame(
+            threshold_frame,
+            bg=self.colors.glass_secondary,
+            relief='flat',
+            bd=1,
+            highlightbackground=self.colors.border_subtle,
+            highlightthickness=1,
+            height=40
+        )
+        scale_container.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 12))
+        scale_container.grid_propagate(False)
+        
+        threshold_scale = tk.Scale(
+            threshold_frame,
+            from_=-20.0,
+            to=10.0,
+            variable=self.decibel_threshold,
+            orient=tk.HORIZONTAL,
+            bg=self.colors.glass_secondary,
+            fg=self.colors.pure_white,
+            highlightthickness=0,
+            relief='flat',
+            font=self.glass_theme.fonts['caption'],
+            showvalue=0
+        )
+        threshold_scale.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 12))
+        
+        self.threshold_label = tk.Label(
+            threshold_frame,
+            text=f"{self.decibel_threshold.get():.1f} dB",
+            bg=self.colors.glass_primary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['heading']
+        )
+        self.threshold_label.grid(row=0, column=1)
+        
+        # Update label when scale changes
+        threshold_scale.configure(
+            command=lambda val: self.threshold_label.configure(
+                text=f"{float(val):.1f} dB"
+            )
+        )
+        
+        # Enhanced description
+        threshold_desc = tk.Label(
+            threshold_container,
+            text="Higher values = fewer clips, Lower values = more clips",
+            bg=self.colors.glass_primary,
+            fg=self.colors.muted_white,
+            font=self.glass_theme.fonts['caption']
+        )
+        threshold_desc.grid(row=1, column=0, sticky=tk.W)
+        
+        current_row += 1
+        
+        # Enhanced clip length setting
+        clip_label = tk.Label(
+            panel.content_frame, 
+            text="Clip Duration:", 
+            bg=self.colors.glass_primary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['body']
+        )
+        clip_label.grid(row=current_row, column=0, sticky=tk.W, pady=(16, 0))
+        
+        clip_container = tk.Frame(panel.content_frame, bg=self.colors.glass_primary)
+        clip_container.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(16, 0), pady=(16, 0))
+        
+        clip_frame = tk.Frame(clip_container, bg=self.colors.glass_primary)
+        clip_frame.grid(row=0, column=0, sticky=tk.W)
+        
+        # Enhanced spinbox with glassmorphism
+        spinbox_container = tk.Frame(
+            clip_frame,
+            bg=self.colors.glass_secondary,
+            relief='flat',
+            bd=1,
+            highlightbackground=self.colors.border_subtle,
+            highlightthickness=1
+        )
+        spinbox_container.grid(row=0, column=0, padx=(0, 12))
+        
+        clip_spin = tk.Spinbox(
+            spinbox_container,
+            from_=10,
+            to=120,
+            width=8,
+            textvariable=self.clip_length,
+            bg=self.colors.glass_secondary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['body'],
+            relief='flat',
+            bd=0,
+            insertbackground=self.colors.pure_white,
+            buttonbackground=self.colors.glass_tertiary,
+            highlightthickness=0
+        )
+        clip_spin.pack(padx=8, pady=8)
+        
+        clip_unit_label = tk.Label(
+            clip_frame,
+            text="seconds (centered on highlight)",
+            bg=self.colors.glass_primary,
+            fg=self.colors.muted_white,
+            font=self.glass_theme.fonts['body']
+        )
+        clip_unit_label.grid(row=0, column=1)
+        
+        current_row += 1
+        
+        # Enhanced advanced options
+        advanced_frame = tk.Frame(panel.content_frame, bg=self.colors.glass_primary)
+        advanced_frame.grid(row=current_row, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(20, 0))
+        
+        # Custom checkboxes with glassmorphism
+        self.create_glassmorphism_checkbox(
+            advanced_frame,
+            "Enable verbose logging",
+            self.verbose_logging,
+            row=0
+        )
+        
+        self.create_glassmorphism_checkbox(
+            advanced_frame,
+            "Use streaming processing (memory efficient)",
+            self.use_streaming,
+            row=1
+        )
+    
+    def create_glassmorphism_checkbox(self, parent, text: str, variable: tk.BooleanVar, row: int):
+        """Create a custom glassmorphism checkbox."""
+        checkbox_frame = tk.Frame(parent, bg=self.colors.glass_primary)
+        checkbox_frame.grid(row=row, column=0, sticky=tk.W, pady=(8, 0))
+        
+        # Custom checkbox using a button
+        checkbox_button = tk.Button(
+            checkbox_frame,
+            text="☐",
+            bg=self.colors.glass_secondary,
+            fg=self.colors.pure_white,
+            font=('Inter', 12),
+            relief='flat',
+            bd=1,
+            width=2,
+            height=1,
+            command=lambda: self.toggle_checkbox(checkbox_button, variable),
+            cursor='hand2',
+            highlightbackground=self.colors.border_subtle,
+            highlightthickness=1
+        )
+        checkbox_button.pack(side=tk.LEFT, padx=(0, 12))
+        
+        # Checkbox label
+        checkbox_label = tk.Label(
+            checkbox_frame,
+            text=text,
+            bg=self.colors.glass_primary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['body'],
+            cursor='hand2'
+        )
+        checkbox_label.pack(side=tk.LEFT)
+        checkbox_label.bind("<Button-1>", lambda e: self.toggle_checkbox(checkbox_button, variable))
+        
+        # Set initial state
+        self.update_checkbox_appearance(checkbox_button, variable.get())
+        
+        # Store reference for updates
+        variable.trace_add('write', lambda *args: self.update_checkbox_appearance(checkbox_button, variable.get()))
+    
+    def toggle_checkbox(self, button: tk.Button, variable: tk.BooleanVar):
+        """Toggle checkbox state."""
+        variable.set(not variable.get())
+    
+    def update_checkbox_appearance(self, button: tk.Button, checked: bool):
+        """Update checkbox visual appearance."""
+        if checked:
+            button.configure(
+                text="☑",
+                bg=self.colors.pure_white,
+                fg=self.colors.pure_black
+            )
+        else:
+            button.configure(
+                text="☐",
+                bg=self.colors.glass_secondary,
+                fg=self.colors.pure_white
+            )
+        
+    def setup_glassmorphism_progress(self, parent):
+        """Set up the ultra-modern progress panel with glassmorphism."""
+        panel = self.create_glass_panel(parent, "Progress & Results")
+        panel.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 16))
+        panel.content_frame.columnconfigure(0, weight=1)
+        parent.rowconfigure(2, weight=1)
+        
+        # Enhanced progress bar with glassmorphism
+        progress_frame = tk.Frame(panel.content_frame, bg=self.colors.glass_primary)
+        progress_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 16))
+        progress_frame.columnconfigure(0, weight=1)
+        
+        progress_label = tk.Label(
+            progress_frame,
+            text="Status:",
+            bg=self.colors.glass_primary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['body']
+        )
+        progress_label.grid(row=0, column=0, sticky=tk.W, pady=(0, 8))
+        
+        # Custom progress bar with glassmorphism styling
+        progress_container = tk.Frame(
+            progress_frame,
+            bg=self.colors.glass_secondary,
+            relief='flat',
+            bd=1,
+            highlightbackground=self.colors.border_subtle,
+            highlightthickness=1,
+            height=8
+        )
+        progress_container.grid(row=1, column=0, sticky=(tk.W, tk.E))
+        progress_container.grid_propagate(False)
+        
+        self.progress_bar = ttk.Progressbar(
+            progress_container,
+            mode='indeterminate',
+            style='Glass.Horizontal.TProgressbar'
+        )
+        self.progress_bar.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
+        
+        # Enhanced status text area with glassmorphism
+        text_frame = tk.Frame(panel.content_frame, bg=self.colors.glass_primary)
+        text_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(16, 0))
+        text_frame.columnconfigure(0, weight=1)
+        text_frame.rowconfigure(0, weight=1)
+        
+        # Glass text container
+        text_container = tk.Frame(
+            text_frame,
+            bg=self.colors.glass_secondary,
+            relief='flat',
+            bd=1,
+            highlightbackground=self.colors.border_subtle,
+            highlightthickness=1
+        )
+        text_container.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=2, pady=2)
+        text_container.columnconfigure(0, weight=1)
+        text_container.rowconfigure(0, weight=1)
+        
+        # Enhanced text widget with glassmorphism styling
+        self.status_text = tk.Text(
+            text_container,
+            height=8,
+            wrap=tk.WORD,
+            state='disabled',
+            bg=self.colors.glass_secondary,
+            fg=self.colors.pure_white,
+            font=self.glass_theme.fonts['mono'],
+            relief='flat',
+            bd=0,
+            insertbackground=self.colors.pure_white,
+            selectbackground=self.colors.glass_hover,
+            selectforeground=self.colors.pure_white
+        )
+        self.status_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=12, pady=12)
+        
+        # Modern scrollbar with glassmorphism
+        scrollbar_container = tk.Frame(
+            text_container,
+            bg=self.colors.glass_tertiary,
+            width=12
+        )
+        scrollbar_container.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        scrollbar_container.grid_propagate(False)
+        
+        scrollbar = ttk.Scrollbar(
+            scrollbar_container,
+            orient=tk.VERTICAL,
+            command=self.status_text.yview,
+            style='Glass.Vertical.TScrollbar'
+        )
+        scrollbar.pack(fill=tk.Y, expand=True, padx=2, pady=2)
+        self.status_text.configure(yscrollcommand=scrollbar.set)
+    
+    def setup_glassmorphism_controls(self, parent):
+        """Set up the ultra-modern control panel with glassmorphism."""
+        panel = tk.Frame(parent, bg=self.colors.deep_black)
+        panel.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 0))
+        
+        # Enhanced button container with glassmorphism background
+        button_container = tk.Frame(
+            panel,
+            bg=self.colors.glass_primary,
+            relief='flat',
+            bd=1,
+            highlightbackground=self.colors.border_subtle,
+            highlightthickness=1
+        )
+        button_container.pack(expand=True, padx=2, pady=2)
+        
+        # Button content frame
+        button_content = tk.Frame(button_container, bg=self.colors.glass_primary)
+        button_content.pack(expand=True, padx=20, pady=16)
+        
+        # Enhanced reference analysis button
+        self.reference_btn = self.create_glass_button(
+            button_content,
+            "📊 Analyze Reference",
+            command=self.analyze_reference,
+            style="secondary"
+        )
+        self.reference_btn.pack(side=tk.LEFT, padx=(0, 16))
+        
+        # Enhanced main action button
+        self.analyze_btn = self.create_glass_button(
+            button_content,
+            "🎬 Generate Highlights",
+            command=self.start_analysis,
+            style="primary"
+        )
+        self.analyze_btn.pack(side=tk.LEFT, padx=(0, 16))
+        
+        # Enhanced open folder button
+        self.open_folder_btn = self.create_glass_button(
+            button_content,
+            "📁 Open Output",
+            command=self.open_output_folder,
+            style="secondary"
+        )
+        self.open_folder_btn.pack(side=tk.LEFT)
+        
+        # Add advanced button animations
+        self.setup_glassmorphism_button_animations()
+    
+    def setup_glassmorphism_button_animations(self):
+        """Set up enhanced glassmorphism animations for buttons."""
+        def create_advanced_hover_effect(button, style_type):
+            def on_enter(event):
+                if style_type == "primary":
+                    self.animation_manager.morphing_transition(
+                        button, 
+                        self.colors.ice_white,
+                        duration=100
+                    )
+                else:
+                    self.animation_manager.morphing_transition(
+                        button, 
+                        self.colors.glass_hover,
+                        duration=100
+                    )
+                    
+            def on_leave(event):
+                if style_type == "primary":
+                    self.animation_manager.morphing_transition(
+                        button, 
+                        self.colors.pure_white,
+                        duration=100
+                    )
+                else:
+                    self.animation_manager.morphing_transition(
+                        button, 
+                        self.colors.glass_primary,
+                        duration=100
+                    )
+                    
+            button.bind("<Enter>", on_enter)
+            button.bind("<Leave>", on_leave)
+        
+        # Apply enhanced hover effects
+        create_advanced_hover_effect(self.reference_btn, "secondary")
+        create_advanced_hover_effect(self.open_folder_btn, "secondary")
+        create_advanced_hover_effect(self.analyze_btn, "primary")
         
     def create_modern_drop_area(self, parent):
         """Create modern drag and drop area with glassmorphism styling."""
@@ -734,27 +1334,41 @@ class ModernHighlighterGUI:
         create_hover_effect(self.open_folder_btn, 'Modern.TButton', 'ModernHover.TButton')
         create_hover_effect(self.analyze_btn, 'Accent.TButton', 'AccentHover.TButton')
         
-    def animate_status_indicator(self, state):
-        """Animate the status indicator."""
+    def animate_glassmorphism_status_indicator(self, state):
+        """Animate the status indicator with glassmorphism effects."""
         colors = {
-            'ready': self.COLORS['success'],
-            'analyzing': self.COLORS['warning'],
-            'error': self.COLORS['error']
+            'ready': self.colors.success,
+            'analyzing': self.colors.warning,
+            'error': self.colors.error
+        }
+        
+        status_texts = {
+            'ready': 'Ready',
+            'analyzing': 'Processing',
+            'error': 'Error'
         }
         
         if state == 'analyzing':
-            # Pulsing animation for analyzing state
+            # Enhanced pulsing animation for analyzing state
             def pulse():
                 if self.is_analyzing:
                     current_color = self.status_indicator.cget('fg')
-                    new_color = self.COLORS['warning'] if current_color == self.COLORS['text_muted'] else self.COLORS['text_muted']
+                    new_color = colors['analyzing'] if current_color == self.colors.muted_white else self.colors.muted_white
                     self.status_indicator.configure(fg=new_color)
-                    self.root.after(500, pulse)
+                    # Animate status text
+                    self.animation_manager.morphing_transition(
+                        self.status_text, 
+                        self.colors.glass_hover,
+                        duration=250
+                    )
+                    self.root.after(750, pulse)
                 else:
-                    self.status_indicator.configure(fg=colors.get('ready', self.COLORS['success']))
+                    self.status_indicator.configure(fg=colors.get('ready', self.colors.success))
+                    self.status_text.configure(text='Ready')
             pulse()
         else:
-            self.status_indicator.configure(fg=colors.get(state, self.COLORS['success']))
+            self.status_indicator.configure(fg=colors.get(state, self.colors.success))
+            self.status_text.configure(text=status_texts.get(state, 'Ready'))
     
     def update_progress_bar_style(self, mode='indeterminate'):
         """Update progress bar with smooth animations."""
@@ -775,24 +1389,62 @@ class ModernHighlighterGUI:
             if pathlib.Path(file_path).suffix.lower() in video_extensions:
                 self.current_video_path.set(file_path)
                 self.log_message(f"✅ Video file loaded: {os.path.basename(file_path)}")
-                self.animate_drop_success()
+                self.animate_glassmorphism_drop_success()
             else:
                 messagebox.showerror("Invalid File", "Please drop a video file.")
-                self.animate_drop_error()
+                self.animate_glassmorphism_drop_error()
                 
-    def animate_drop_success(self):
-        """Animate successful file drop."""
-        # Brief success animation
+    def animate_glassmorphism_drop_success(self):
+        """Animate successful file drop with glassmorphism effects."""
+        # Enhanced success animation
         original_bg = self.drop_frame.cget('bg')
-        self.drop_frame.configure(bg=self.COLORS['success'])
-        self.root.after(150, lambda: self.drop_frame.configure(bg=original_bg))
+        self.drop_frame.configure(
+            bg=self.colors.success,
+            highlightbackground=self.colors.success
+        )
         
-    def animate_drop_error(self):
-        """Animate failed file drop."""
-        # Brief error animation
+        # Show success notification
+        self.show_notification("File Loaded", "Video file loaded successfully", "success")
+        
+        # Animate back to normal with glassmorphism transition
+        def restore_normal():
+            self.animation_manager.morphing_transition(
+                self.drop_frame, 
+                original_bg,
+                duration=200
+            )
+            self.drop_frame.configure(
+                bg=original_bg,
+                highlightbackground=self.colors.border_subtle
+            )
+        
+        self.root.after(200, restore_normal)
+        
+    def animate_glassmorphism_drop_error(self):
+        """Animate failed file drop with glassmorphism effects."""
+        # Enhanced error animation
         original_bg = self.drop_frame.cget('bg')
-        self.drop_frame.configure(bg=self.COLORS['error'])
-        self.root.after(150, lambda: self.drop_frame.configure(bg=original_bg))
+        self.drop_frame.configure(
+            bg=self.colors.error,
+            highlightbackground=self.colors.error
+        )
+        
+        # Show error notification
+        self.show_notification("Invalid File", "Please select a valid video file", "error")
+        
+        # Animate back to normal
+        def restore_normal():
+            self.animation_manager.morphing_transition(
+                self.drop_frame, 
+                original_bg,
+                duration=200
+            )
+            self.drop_frame.configure(
+                bg=original_bg,
+                highlightbackground=self.colors.border_subtle
+            )
+        
+        self.root.after(200, restore_normal)
                 
     def browse_video_file(self):
         """Open file dialog to select video file with modern styling."""
@@ -1080,7 +1732,7 @@ class ModernHighlighterGUI:
         self.is_analyzing = True
         self.analyze_btn.configure(text="⏳ Analyzing...", state='disabled')
         self.update_progress_bar_style('indeterminate')
-        self.animate_status_indicator('analyzing')
+        self.animate_glassmorphism_status_indicator('analyzing')
         
         self.log_message("🚀 Starting highlight analysis...")
         self.log_message(f"📹 Video: {os.path.basename(self.current_video_path.get())}")
@@ -1238,7 +1890,7 @@ class ModernHighlighterGUI:
         self.update_progress_bar_style('determinate')
         self.progress_bar.configure(value=100)
         self.analyze_btn.configure(text="🎬 Generate Highlights", state='normal')
-        self.animate_status_indicator('ready')
+        self.animate_glassmorphism_status_indicator('ready')
         
         self.log_message(f"✅ Analysis complete! Generated {highlight_count} highlight clips.")
         self.log_message(f"📁 Clips saved to: {self.output_directory.get()}")
@@ -1263,7 +1915,7 @@ class ModernHighlighterGUI:
         self.update_progress_bar_style('determinate')
         self.progress_bar.configure(value=0)
         self.analyze_btn.configure(text="🎬 Generate Highlights", state='normal')
-        self.animate_status_indicator('error')
+        self.animate_glassmorphism_status_indicator('error')
         
         self.log_message(f"❌ Analysis failed: {error_message}")
         messagebox.showerror("Analysis Failed", f"Analysis failed with error:\n\n{error_message}")
@@ -1274,7 +1926,7 @@ class ModernHighlighterGUI:
         self.update_progress_bar_style('determinate')
         self.progress_bar.configure(value=0)
         self.analyze_btn.configure(text="🎬 Generate Highlights", state='normal')
-        self.animate_status_indicator('error')
+        self.animate_glassmorphism_status_indicator('error')
         
         self.log_message(f"❌ FFmpeg Error: {error_message}")
         
@@ -1313,9 +1965,9 @@ class ModernHighlighterGUI:
             
     def run(self):
         """Start the modern GUI application."""
-        self.log_message("� M0 Clipper: Highlight Forge v3.0 initialized!")
+        self.log_message("🔥 M0 Clipper: Highlight Forge v3.0 initialized!")
         self.log_message("⚡ Cyber systems online. Drop a video file or click Browse to begin extraction.")
-        self.animate_status_indicator('ready')
+        self.animate_glassmorphism_status_indicator('ready')
         self.root.mainloop()
         
     def __del__(self):
