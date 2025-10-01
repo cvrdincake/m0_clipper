@@ -109,7 +109,18 @@ class HighlighterGUI:
             drop_label.bind("<Button-1>", lambda e: self.browse_video_file())
         else:
             # Fallback: just a button if DND not available
-            ttk.Label(video_frame, text="Select video file:").grid(row=0, column=0, sticky=tk.W)
+            fallback_frame = tk.Frame(video_frame, bg='lightblue', height=60, 
+                                    relief=tk.RAISED, borderwidth=2)
+            fallback_frame.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
+            fallback_frame.columnconfigure(0, weight=1)
+            
+            fallback_label = tk.Label(fallback_frame, text="📁 Click here to browse for a video file", 
+                                    bg='lightblue', font=('TkDefaultFont', 10))
+            fallback_label.grid(row=0, column=0, pady=20)
+            
+            # Make fallback area clickable
+            fallback_frame.bind("<Button-1>", lambda e: self.browse_video_file())
+            fallback_label.bind("<Button-1>", lambda e: self.browse_video_file())
         
         # File path display
         ttk.Label(video_frame, text="Selected file:").grid(row=1, column=0, sticky=tk.W, pady=(5, 0))
@@ -290,7 +301,8 @@ class HighlighterGUI:
                 self.root.after(0, lambda: self.show_reference_results(avg_db, max_db, recommended_threshold))
                 
             except Exception as e:
-                self.root.after(0, lambda: self.log_message(f"Reference analysis failed: {str(e)}"))
+                error_msg = str(e)
+                self.root.after(0, lambda: self.log_message(f"Reference analysis failed: {error_msg}"))
                 
         # Run in separate thread
         thread = threading.Thread(target=run_reference_analysis, daemon=True)
@@ -379,7 +391,8 @@ class HighlighterGUI:
             self.root.after(0, lambda: self.analysis_complete(highlight_count))
             
         except Exception as e:
-            self.root.after(0, lambda: self.analysis_failed(str(e)))
+            error_msg = str(e)
+            self.root.after(0, lambda: self.analysis_failed(error_msg))
             
     def analysis_complete(self, highlight_count):
         """Handle successful analysis completion."""
