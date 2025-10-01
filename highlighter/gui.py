@@ -523,12 +523,12 @@ class HighlighterGUI:
                 self.root.after(0, lambda: self.log_message("⚠️ No highlights found! Try lowering the decibel threshold."))
                 self.root.after(0, lambda: self.analysis_complete(0))
                 return
-            
+
             self.root.after(0, lambda: self.log_message(f"Generating {highlight_count} highlight clips..."))
-            audio_analyzer.generate_all_highlights()
-            
-            # Verify clips were actually created
-            self.root.after(0, lambda: self.verify_clips_generated(highlight_count))
+            completed_count, failed_count = audio_analyzer.generate_all_highlights()
+
+            # Report results with actual counts
+            self.root.after(0, lambda: self.analysis_complete_with_results(completed_count, failed_count, highlight_count))
             
         except RuntimeError as e:
             error_msg = str(e)
@@ -562,6 +562,36 @@ class HighlighterGUI:
         
         # Complete analysis with actual count
         self.analysis_complete(actual_count)
+        
+    def analysis_complete_with_results(self, completed_count, failed_count, expected_count):
+        """Handle analysis completion with detailed results."""
+        self.is_analyzing = False
+        self.progress_bar.stop()
+        self.analyze_btn.configure(text="🎬 Generate Highlights", state='normal')
+        
+        total_processed = completed_count + failed_count
+        
+        if failed_count > 0:
+            self.log_message(f"✅ Analysis complete! {completed_count} clips generated successfully, {failed_count} failed.")
+            self.log_message(f"Clips saved to: {self.output_directory.get()}")
+            
+            if completed_count > 0:
+                messagebox.showwarning("Partial Success", 
+                                     f"Generated {completed_count} out of {expected_count} clips.\n"
+                                     f"{failed_count} clips failed (likely FFmpeg errors).\n\n"
+                                     f"Successful clips saved to:\n{self.output_directory.get()}")
+            else:
+                messagebox.showerror("Generation Failed", 
+                                   f"All {expected_count} clips failed to generate.\n\n"
+                                   "This is usually due to FFmpeg errors or file permissions.\n"
+                                   "Check the log for details.")
+        else:
+            self.log_message(f"✅ Analysis complete! Generated {completed_count} highlight clips successfully.")
+            self.log_message(f"Clips saved to: {self.output_directory.get()}")
+            
+            messagebox.showinfo("Analysis Complete", 
+                               f"Successfully generated {completed_count} highlight clips!\n\n"
+                               f"Clips saved to:\n{self.output_directory.get()}")
         
     def analysis_complete(self, highlight_count):
         """Handle successful analysis completion."""

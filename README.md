@@ -1,43 +1,94 @@
+
 <p align="center">
-    <img align="center" src="https://i.ibb.co/bJ1svtq/simplified-icon.png">
+    <img src="https://i.ibb.co/bJ1svtq/simplified-icon.png" width="120" />
 </p>
 
-<div align="center">
+# M0 Clipper: Auto Highlighter v0.2.0
 
-# ⚡ Auto Highlighter v0.2.0 ⚡
+**Automatic highlight clip generator for gaming videos and streams.**
 
-*AI-powered automatic highlight clip generator for gaming videos and streams*
+---
 
-</div>
+## 🚀 Features
 
-![example](https://i.postimg.cc/yNd9GXKf/Animation.gif)
+- **Drag-and-drop GUI** for effortless highlight generation
+- **Intelligent audio analysis**: multi-criteria detection (sustained moments, spikes, dynamic)
+- **Gaming-optimized presets** and threshold recommendations
+- **Batch clip export** with smart naming (timestamp, decibel, unique ID)
+- **Reference analysis** for personalized threshold suggestions
+- **Cross-platform**: Windows, macOS, Linux
+- **Robust error handling** and FFmpeg integration
 
-## 🎯 **New in v0.2.0:**
-- **🧠 Enhanced AI Detection**: Multi-criteria analysis with sustained moments, spikes, and dynamic detection
-- **🎮 Gaming-Optimized**: Presets and algorithms specifically tuned for gaming content
-- **🖥️ Modern GUI**: Drag-and-drop interface with intelligent threshold recommendations
-- **⚡ Better Performance**: Improved clip generation and error handling
-- **📊 Smart Analytics**: Reference analysis with personalized threshold suggestions
+---
 
-## 📦 **Quick Installation**
+## �️ Quick Start
+
+### 1. Install Dependencies
+
+**Python 3.10+ required**
+
+Install FFmpeg (required for video/audio processing):
+
+- **Windows:** [Download](https://ffmpeg.org/download.html) or `choco install ffmpeg`
+- **macOS:** `brew install ffmpeg`
+- **Linux:** `sudo apt install ffmpeg`
+
+Install Python dependencies:
 
 ```bash
-# Install from PyPI (coming soon)
-pip install auto-highlighter-py
-
-# Or install from source
 git clone https://github.com/cvrdincake/m0_clipper.git
 cd m0_clipper
 pip install -e .
+# For GUI: pip install tkinterdnd2
 ```
 
-----
+---
 
-`auto-highlighter` is a tool I developed to assist in video editing. It looks through hours of a
-video for you and finds any clips that can be used for a TikTok or editing.
+### 2. Run the GUI Client
 
-As an editor for multiple streamers, I am often tasked with having to look through
-hours of content to find a clip to create a TikTok from. So this tool gets the job done in
+```bash
+python -m highlighter.gui
+```
+
+- Drag and drop your VOD/video file onto the window
+- Analyze reference to get recommended thresholds
+- Click "Generate Highlights" to export clips
+
+### 3. Run from CLI
+
+```bash
+python -m highlighter --help
+```
+
+---
+
+## 🎬 How It Works
+
+1. **Audio Extraction:** Uses FFmpeg to extract audio from your video
+2. **Intelligent Detection:** Finds highlight moments using decibel thresholds, rolling averages, and spike/sustained analysis
+3. **Clip Generation:** Exports clips centered on detected highlights, with smart file naming
+4. **Reference Analysis:** Analyzes your video to recommend optimal thresholds for gaming, streaming, or other content
+
+---
+
+## ⚠️ Troubleshooting
+
+- **FFmpeg not found:** Ensure FFmpeg is installed and in your PATH
+- **No highlights found:** Try lowering the decibel threshold or use "Analyze Reference" for suggestions
+- **Clips not exported:** Check output directory permissions and disk space
+- **Console hangs on clip generation:** Large videos or many highlights may take time; if stuck, check for FFmpeg errors or subprocess issues
+
+---
+
+## 🛠️ Contributing
+
+Pull requests and issues welcome! See `PROJECT_IMPROVEMENTS.md` for roadmap and ideas.
+
+---
+
+## 📄 License
+
+MIT License. See LICENSE for details.
 minutes.
 
 ![demo.gif](https://i.postimg.cc/Cx0GWLf2/demo.gif)

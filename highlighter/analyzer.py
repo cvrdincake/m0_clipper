@@ -173,20 +173,80 @@ class AudioAnalysis:
         for h in highlights:
             self.generate_from_highlight(h)
         
-        # Wait for all subprocesses to complete
+        # Wait for all subprocesses to complete with timeout and error handling
         logger.info("Waiting for clip generation to complete...")
         completed_count = 0
-        while self._subprocesses:
-            for p in self._subprocesses:
-                if p.poll() is not None:
-                    self._subprocesses.remove(p)
-                    completed_count += 1
-                    logger.info(f"Clip {completed_count}/{len(highlights)} completed")
-                    break
-            # Small delay to prevent busy waiting
-            time.sleep(0.1)
+        failed_count = 0
+        max_wait_time = 300  # 5 minutes total timeout
+        process_timeout = 60  # 60 seconds per process timeout
+        start_time = time.time()
+        
+        while self._subprocesses and (time.time() - start_time) < max_wait_time:
+            processes_to_remove = []
             
-        logger.info(f"All {len(highlights)} clips generated successfully")
+            for p in self._subprocesses:
+                poll_result = p.poll()
+                
+                if poll_result is not None:
+                    # Process completed
+                    processes_to_remove.append(p)
+                    if poll_result == 0:
+                        completed_count += 1
+                        logger.info(f"Clip {completed_count + failed_count}/{len(highlights)} completed successfully")
+                    else:
+                        failed_count += 1
+                        # Get error output
+                        try:
+                            stdout, stderr = p.communicate(timeout=1)
+                            error_msg = stderr.decode('utf-8', errors='ignore') if stderr else "Unknown error"
+                            logger.warning(f"Clip generation failed (exit code {poll_result}): {error_msg[:200]}")
+                        except:
+                            logger.warning(f"Clip generation failed (exit code {poll_result})")
+                        
+                elif time.time() - start_time > process_timeout:
+                    # Process timeout - kill it
+                    logger.warning(f"Process timeout after {process_timeout}s, terminating...")
+                    try:
+                        p.terminate()
+                        time.sleep(2)
+                        if p.poll() is None:
+                            p.kill()
+                        processes_to_remove.append(p)
+                        failed_count += 1
+                    except Exception as e:
+                        logger.error(f"Failed to terminate stuck process: {e}")
+                        processes_to_remove.append(p)
+                        failed_count += 1
+            
+            # Remove completed/failed processes
+            for p in processes_to_remove:
+                if p in self._subprocesses:
+                    self._subprocesses.remove(p)
+            
+            # Small delay to prevent busy waiting
+            time.sleep(0.5)
+        
+        # Handle any remaining processes (timeout case)
+        if self._subprocesses:
+            logger.error(f"Timeout reached! {len(self._subprocesses)} processes still running after {max_wait_time}s")
+            for p in self._subprocesses:
+                try:
+                    p.terminate()
+                    time.sleep(1)
+                    if p.poll() is None:
+                        p.kill()
+                    failed_count += 1
+                except Exception as e:
+                    logger.error(f"Failed to cleanup stuck process: {e}")
+            self._subprocesses.clear()
+        
+        total_processed = completed_count + failed_count
+        if failed_count > 0:
+            logger.warning(f"Clip generation completed: {completed_count} successful, {failed_count} failed out of {len(highlights)} total")
+        else:
+            logger.info(f"All {completed_count} clips generated successfully")
+        
+        return completed_count, failed_count
     
     def generate_from_highlight(self, position):
         highlight = self._captured_result[position]

@@ -132,7 +132,12 @@ def analyze(
     _a = analyzer.AudioAnalysis(path_to_video, audio, output_directory, decibel_threshold=decibel_threshold)
     _a.crest_ceiling_algorithm()
     _a.export()
-    _a.generate_all_highlights()
+    completed_count, failed_count = _a.generate_all_highlights()
+    
+    # Report results
+    if failed_count > 0:
+        console.print(f"[yellow]Warning: {failed_count} clips failed to generate[/yellow]")
+    console.print(f"[green]✅ Generated {completed_count} highlight clips successfully![/green]")
 
 def cli():
     app()
