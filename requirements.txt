@@ -1,0 +1,12 @@
+# Core dependencies for Auto Highlighter
+ffmpeg-python>=0.2.0
+librosa>=0.10.2.post1
+loguru>=0.7.2
+numpy>=2.0.2
+rich>=13.9.3
+scikit-learn>=1.5.2
+typer>=0.12.5
+tkinterdnd2>=0.3.0
+
+# Development dependencies (optional)
+# Install with: pip install -r requirements.txt -r requirements-dev.txt

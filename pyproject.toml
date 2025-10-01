@@ -1,9 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "auto-highlighter-py"
-version = "0.1.0"
-description = "automatically clip moments from twitch VODs"
+version = "0.2.0"
+description = "AI-powered automatic highlight clip generator for gaming videos and streams"
 readme = "README.md"
 requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "cvrdincake"}
+]
+keywords = ["video", "highlights", "gaming", "clips", "editing", "twitch", "youtube", "vod"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Multimedia :: Video",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
 dependencies = [
     "ffmpeg-python>=0.2.0",
     "librosa>=0.10.2.post1",
@@ -14,3 +33,20 @@ dependencies = [
     "typer>=0.12.5",
     "tkinterdnd2>=0.3.0",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=22.0",
+    "flake8>=4.0",
+    "mypy>=0.991",
+]
+
+[project.scripts]
+auto-highlighter = "highlighter:cli"
+highlighter-gui = "highlighter.gui:main"
+
+[project.urls]
+Homepage = "https://github.com/cvrdincake/m0_clipper"
+Repository = "https://github.com/cvrdincake/m0_clipper.git"
+Issues = "https://github.com/cvrdincake/m0_clipper/issues"

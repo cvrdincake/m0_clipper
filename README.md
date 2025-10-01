@@ -4,14 +4,31 @@
 
 <div align="center">
 
-# ⚡auto-highlighter⚡
+# ⚡ Auto Highlighter v0.2.0 ⚡
+
+*AI-powered automatic highlight clip generator for gaming videos and streams*
 
 </div>
 
 ![example](https://i.postimg.cc/yNd9GXKf/Animation.gif)
 
-```commandline
-pip install auto-highligher-py
+## 🎯 **New in v0.2.0:**
+- **🧠 Enhanced AI Detection**: Multi-criteria analysis with sustained moments, spikes, and dynamic detection
+- **🎮 Gaming-Optimized**: Presets and algorithms specifically tuned for gaming content
+- **🖥️ Modern GUI**: Drag-and-drop interface with intelligent threshold recommendations
+- **⚡ Better Performance**: Improved clip generation and error handling
+- **📊 Smart Analytics**: Reference analysis with personalized threshold suggestions
+
+## 📦 **Quick Installation**
+
+```bash
+# Install from PyPI (coming soon)
+pip install auto-highlighter-py
+
+# Or install from source
+git clone https://github.com/cvrdincake/m0_clipper.git
+cd m0_clipper
+pip install -e .
 ```
 
 ----

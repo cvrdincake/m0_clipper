@@ -195,7 +195,12 @@ class AudioAnalysis:
         start = int(position - self.start_point)
         end = int(position + self.end_point)
         
-        output = os.path.join(self.output_path, f'{common.unique_id()} - {point}.mp4')
+        # Better naming: timestamp + decibel + unique ID
+        timestamp = str(datetime.timedelta(seconds=int(position))).replace(':', 'h', 1).replace(':', 'm', 1) + 's'
+        decibel_str = f"{highlight.decibel:.1f}dB"
+        unique_id = common.unique_id()
+        
+        output = os.path.join(self.output_path, f'{timestamp}_{decibel_str}_{unique_id}.mp4')
         
         if start < 0:
             start = 0

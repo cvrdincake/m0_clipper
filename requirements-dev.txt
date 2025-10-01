@@ -1,0 +1,6 @@
+# Development dependencies
+pytest>=7.0
+black>=22.0
+flake8>=4.0
+mypy>=0.991
+pre-commit>=2.20.0

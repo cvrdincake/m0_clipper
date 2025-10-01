@@ -42,7 +42,7 @@ class HighlighterGUI:
         # Variables
         self.current_video_path = tk.StringVar()
         self.output_directory = tk.StringVar(value=os.path.join(os.getcwd(), "highlights"))
-        self.decibel_threshold = tk.DoubleVar(value=-15.0)  # More reasonable default for gaming
+        self.decibel_threshold = tk.DoubleVar(value=-10.0)  # Better default for gaming content
         self.clip_length = tk.IntVar(value=30)  # Total clip length in seconds
         self.verbose_logging = tk.BooleanVar(value=False)
         
