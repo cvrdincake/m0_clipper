@@ -113,7 +113,15 @@ class AudioProcessor:
         Returns:
             np.array: array of decibels.
         """
-        return [20 * np.log10(np.sqrt(np.mean(chunk ** 2))) for chunk in c]
+        decibels = []
+        for chunk in c:
+            rms = np.sqrt(np.mean(chunk ** 2))
+            if rms > 0:
+                db = 20 * np.log10(rms)
+            else:
+                db = -60.0  # Assign a very low dB value for silence
+            decibels.append(db)
+        return decibels
     
     def get_max_decibel(self):
         as_decibels = librosa.amplitude_to_db(self.audio)

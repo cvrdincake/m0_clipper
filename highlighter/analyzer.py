@@ -111,14 +111,29 @@ class AudioAnalysis:
     def generate_all_highlights(self):
         highlights = self._captured_result.keys()
         
+        if not highlights:
+            logger.warning("No highlights found to generate clips")
+            return
+            
+        logger.info(f"Starting generation of {len(highlights)} highlight clips")
+        
         for h in highlights:
             self.generate_from_highlight(h)
         
+        # Wait for all subprocesses to complete
+        logger.info("Waiting for clip generation to complete...")
+        completed_count = 0
         while self._subprocesses:
             for p in self._subprocesses:
                 if p.poll() is not None:
                     self._subprocesses.remove(p)
+                    completed_count += 1
+                    logger.info(f"Clip {completed_count}/{len(highlights)} completed")
                     break
+            # Small delay to prevent busy waiting
+            time.sleep(0.1)
+            
+        logger.info(f"All {len(highlights)} clips generated successfully")
     
     def generate_from_highlight(self, position):
         highlight = self._captured_result[position]
@@ -133,10 +148,31 @@ class AudioAnalysis:
             start = 0
         
         if end > self._processor.duration:
-            end = self._processor.duration
+            end = int(self._processor.duration)
         
-        # the ffmpeg module was buggin', so i had to resort to subprocess 😭
-        # todo: find a way to use ffmpeg module instead of subprocess 
-        p = subprocess.Popen(f'ffmpeg -i \"{self.video_path}\" -ss {start} -to {end} -c copy \"{output}\"')
-        self._subprocesses.append(p)
+        logger.debug(f"Generating clip: {start}s to {end}s -> {os.path.basename(output)}")
+        
+        # Use proper subprocess with better error handling
+        try:
+            cmd = [
+                'ffmpeg',
+                '-i', self.video_path,
+                '-ss', str(start),
+                '-to', str(end),
+                '-c', 'copy',
+                '-avoid_negative_ts', 'make_zero',
+                '-y',  # Overwrite output files
+                output
+            ]
+            
+            p = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+            )
+            self._subprocesses.append(p)
+            
+        except Exception as e:
+            logger.error(f"Failed to start clip generation for position {position}: {e}")
         

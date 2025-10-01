@@ -411,11 +411,18 @@ class HighlighterGUI:
             
             # Generate highlight clips
             highlight_count = len(audio_analyzer._captured_result)
+            self.root.after(0, lambda: self.log_message(f"Found {highlight_count} highlights to process"))
+            
+            if highlight_count == 0:
+                self.root.after(0, lambda: self.log_message("⚠️ No highlights found! Try lowering the decibel threshold."))
+                self.root.after(0, lambda: self.analysis_complete(0))
+                return
+            
             self.root.after(0, lambda: self.log_message(f"Generating {highlight_count} highlight clips..."))
             audio_analyzer.generate_all_highlights()
             
-            # Analysis complete
-            self.root.after(0, lambda: self.analysis_complete(highlight_count))
+            # Verify clips were actually created
+            self.root.after(0, lambda: self.verify_clips_generated(highlight_count))
             
         except RuntimeError as e:
             error_msg = str(e)
@@ -424,6 +431,32 @@ class HighlighterGUI:
             error_msg = str(e)
             self.root.after(0, lambda: self.analysis_failed(error_msg))
             
+    def verify_clips_generated(self, expected_count):
+        """Verify that video clips were actually generated."""
+        import time
+        import glob
+        
+        # Wait a moment for file system to update
+        time.sleep(1)
+        
+        # Count actual video files
+        video_pattern = os.path.join(self.output_directory.get(), "*.mp4")
+        video_files = glob.glob(video_pattern)
+        actual_count = len(video_files)
+        
+        self.log_message(f"Verification: {actual_count} video files found out of {expected_count} expected")
+        
+        if actual_count == 0:
+            self.log_message("❌ No video clips were generated!")
+            self.log_message("This usually means FFmpeg failed to create the clips.")
+            self.log_message("Check that FFmpeg is properly installed and in your PATH.")
+        elif actual_count < expected_count:
+            self.log_message(f"⚠️ Only {actual_count}/{expected_count} clips were generated")
+            self.log_message("Some clips may have failed due to FFmpeg errors")
+        
+        # Complete analysis with actual count
+        self.analysis_complete(actual_count)
+        
     def analysis_complete(self, highlight_count):
         """Handle successful analysis completion."""
         self.is_analyzing = False
