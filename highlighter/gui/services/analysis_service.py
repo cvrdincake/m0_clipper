@@ -11,7 +11,7 @@ import time
 from typing import Optional, Dict, Any, Callable
 from pathlib import Path
 
-from ...core import ErrorHandler, AudioProcessingError, VideoProcessingError
+from ...core import ErrorHandler, AudioProcessingError, VideoProcessingError, ValidationError
 from ..state import StateManager
 from ... import processor, analyzer
 
