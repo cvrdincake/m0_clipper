@@ -47,6 +47,10 @@ class MainApplication:
         self.setup_layout()
         self.bind_events()
         
+        # Async processing support
+        self._cleanup_scheduled = False
+        self._analysis_service = None
+        
     def setup_logging(self):
         """Initialize logging for the application."""
         self.logger = setup_logging()
@@ -59,7 +63,11 @@ class MainApplication:
         
         # Initialize services
         self.analysis_service = AnalysisService(self.state_manager)
+        self._analysis_service = self.analysis_service  # Keep reference for cleanup
         self.notification_service = NotificationService()
+        
+        # Link state manager to root for async updates
+        self.state_manager.root_widget = self.root
         
     def create_main_window(self):
         """Create and configure the main application window."""
@@ -208,6 +216,7 @@ class MainApplication:
             self.root.bind("<Control-o>", lambda e: self.video_input.browse_file())
             self.root.bind("<Control-Return>", lambda e: self.control_panel.start_analysis())
             self.root.bind("<F5>", lambda e: self.control_panel.analyze_reference())
+            self.root.bind("<Escape>", lambda e: self._stop_current_analysis())  # Emergency stop
             
             self.logger.info("Event bindings configured")
             
@@ -237,25 +246,53 @@ class MainApplication:
             geometry = self.root.geometry()
             self.state_manager.state.window_geometry = geometry
     
+    def _stop_current_analysis(self):
+        """Emergency stop for current analysis (triggered by Escape key)."""
+        if self._analysis_service:
+            self._analysis_service.stop_analysis()
+            self.logger.info("Analysis stopped by user (Escape key)")
+    
     def on_closing(self):
-        """Handle application closing."""
+        """Handle application closing with proper cleanup."""
         try:
-            self.logger.info("Application closing")
+            self.logger.info("Application closing...")
             
             # Stop any running analysis
-            if self.state_manager.state.is_analyzing:
-                self.analysis_service.stop_analysis()
+            if self._analysis_service:
+                self._analysis_service.stop_analysis()
             
-            # Save any persistent state here if needed
-            
-            # Close the application
-            self.root.quit()
-            self.root.destroy()
+            # Schedule cleanup for background operations
+            if not self._cleanup_scheduled:
+                self._cleanup_scheduled = True
+                self.root.after(100, self._perform_cleanup)
             
         except Exception as e:
-            self.logger.error(f"Error during application shutdown: {e}")
-            # Force close if there's an error
-            sys.exit(1)
+            self.logger.error(f"Error during application closing: {e}")
+            # Force close if cleanup fails
+            self.root.destroy()
+    
+    def _perform_cleanup(self):
+        """Perform final cleanup of resources."""
+        try:
+            # Stop animations
+            if hasattr(self, 'animation_manager'):
+                self.animation_manager.stop_all_animations()
+            
+            # Clean up services
+            if self._analysis_service:
+                self._analysis_service.stop_analysis()
+            
+            # Save state
+            if hasattr(self, 'state_manager'):
+                self.state_manager.save_state()
+            
+            self.logger.info("Cleanup completed")
+            
+        except Exception as e:
+            self.logger.error(f"Error during cleanup: {e}")
+        finally:
+            # Force destroy to prevent hanging
+            self.root.destroy()
     
     def run(self):
         """Start the main application event loop."""

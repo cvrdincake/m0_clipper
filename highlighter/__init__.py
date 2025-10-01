@@ -32,7 +32,16 @@ def reference(
     
     if not video_as_path.exists():
         logger.error(f'file does not exist: {path_to_video}')
-        exit(1)
+        from .core.exceptions import FileSystemError
+        raise FileSystemError(
+            f"Video file does not exist: {path_to_video}",
+            path=str(path_to_video),
+            suggested_actions=[
+                "Check the file path for typos",
+                "Ensure the file exists and is accessible",
+                "Try using an absolute path"
+            ]
+        )
     
     # Extract audio first
     audio_path = processor.extract_audio_from_video(path_to_video, DEFAULT_TEMP_DIR.name)
@@ -118,11 +127,33 @@ def batch(
         logger.disable('highlighter')
     
     # Find video files matching pattern
-    video_files = glob.glob(videos_pattern)
+    try:
+        video_files = glob.glob(videos_pattern)
+    except (OSError, PermissionError) as e:
+        from .core.exceptions import FileSystemError
+        raise FileSystemError(
+            f"Cannot access files matching pattern: {videos_pattern}",
+            path=videos_pattern,
+            original_exception=e,
+            suggested_actions=[
+                "Check directory permissions",
+                "Verify the pattern syntax",
+                "Use absolute paths"
+            ]
+        )
     
     if not video_files:
         console.print(f"[red]No video files found matching pattern: {videos_pattern}[/red]")
-        exit(1)
+        from .core.exceptions import FileSystemError
+        raise FileSystemError(
+            f"No video files found matching pattern: {videos_pattern}",
+            path=videos_pattern,
+            suggested_actions=[
+                "Check the pattern syntax",
+                "Verify files exist in the specified directory",
+                "Use absolute paths or correct relative paths"
+            ]
+        )
     
     console.print(f"[green]Found {len(video_files)} video files to process[/green]")
     
@@ -244,31 +275,106 @@ def analyze(
     if not video_as_path.exists():
         logger.error(f'File does not exist: {path_to_video}')
         
-        files_in_video_path = glob.glob(f'{video_as_path.parent}/*')
+        try:
+            # Safely check directory and find similar files
+            if video_as_path.parent.exists() and video_as_path.parent.is_dir():
+                files_in_video_path = glob.glob(str(video_as_path.parent / '*'))
+            else:
+                files_in_video_path = []
+        except (OSError, PermissionError) as e:
+            from .core.exceptions import FileSystemError
+            raise FileSystemError(
+                f"Cannot access directory: {video_as_path.parent}",
+                path=str(video_as_path.parent),
+                original_exception=e,
+                suggested_actions=[
+                    "Check directory permissions",
+                    "Verify the parent directory exists",
+                    "Use a different path"
+                ]
+            )
+        
         related_file = None
         
-        for file in files_in_video_path:
-            if common.similarity(file, path_to_video) > 0.90:
-                console.print(f'Found similar file: [bold green]"{file}"')
-                confirm = Prompt.ask('Did you mean this file? ([italic]skip if this is a mistake.[/])', choices=['yes', 'no', 'skip'])
-                if confirm == 'yes':
-                    related_file = file
-                    break
-                elif confirm == 'skip':
-                    break
-                else:
-                    logger.critical('no related file found. exiting...')
-                    exit(1)
+        try:
+            for file in files_in_video_path:
+                if common.similarity(file, path_to_video) > 0.90:
+                    console.print(f'Found similar file: [bold green]"{file}"')
+                    confirm = Prompt.ask('Did you mean this file? ([italic]skip if this is a mistake.[/])', choices=['yes', 'no', 'skip'])
+                    if confirm == 'yes':
+                        related_file = file
+                        break
+                    elif confirm == 'skip':
+                        break
+                    else:
+                        logger.critical('no related file found. exiting...')
+                        from .core.exceptions import FileSystemError
+                        raise FileSystemError(
+                            "No suitable video file found after user interaction",
+                            path=str(path_to_video),
+                            suggested_actions=[
+                                "Check the original file path",
+                                "Verify file exists and is accessible"
+                            ]
+                        )
+        except Exception as e:
+            if not isinstance(e, (FileSystemError, KeyboardInterrupt)):
+                from .core.exceptions import FileSystemError
+                raise FileSystemError(
+                    f"Error during file similarity check: {str(e)}",
+                    path=str(path_to_video),
+                    original_exception=e,
+                    suggested_actions=[
+                        "Check file permissions",
+                        "Verify file system accessibility",
+                        "Try using absolute paths"
+                    ]
+                )
+            raise
                     
         if related_file:
             logger.info(f'Using related file: {related_file}')
             path_to_video = related_file
         else:
-            exit(1)
+            from .core.exceptions import FileSystemError
+            raise FileSystemError(
+                f"Video file not found and no suitable alternative located: {path_to_video}",
+                path=str(path_to_video),
+                suggested_actions=[
+                    "Verify the file path is correct",
+                    "Check file permissions",
+                    "Ensure the file is not corrupted or moved"
+                ]
+            )
             
     if not output_as_path.exists():
         logger.info(f'Creating output directory: {output_directory}')
-        output_as_path.mkdir(parents=True, exist_ok=True)
+        try:
+            output_as_path.mkdir(parents=True, exist_ok=True)
+        except (OSError, PermissionError) as e:
+            from .core.exceptions import FileSystemError
+            raise FileSystemError(
+                f"Cannot create output directory: {output_directory}",
+                path=str(output_as_path),
+                original_exception=e,
+                suggested_actions=[
+                    "Check directory permissions",
+                    "Verify parent directory exists",
+                    "Use a different output location",
+                    "Run with appropriate privileges"
+                ]
+            )
+    elif not output_as_path.is_dir():
+        from .core.exceptions import FileSystemError
+        raise FileSystemError(
+            f"Output path exists but is not a directory: {output_directory}",
+            path=str(output_as_path),
+            suggested_actions=[
+                "Choose a different output path",
+                "Remove the existing file",
+                "Use a directory path instead"
+            ]
+        )
     
     # Extract audio
     audio_path = processor.extract_audio_from_video(path_to_video, DEFAULT_TEMP_DIR.name)

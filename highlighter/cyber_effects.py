@@ -257,6 +257,8 @@ class CyberProgressRing:
         self.progress = 0.0
         self.is_indeterminate = False
         self.rotation = 0
+        self._animation_id = None  # Track animation callbacks
+        self._is_destroyed = False  # Track widget destruction
         
         # Create canvas
         self.canvas = Canvas(
@@ -298,6 +300,26 @@ class CyberProgressRing:
         if enabled:
             self.animate_indeterminate()
         else:
+            self.stop_animation()
+    
+    def stop_animation(self):
+        """Stop any running animations and clean up resources."""
+        self.is_indeterminate = False
+        if self._animation_id:
+            try:
+                self.canvas.after_cancel(self._animation_id)
+            except tk.TclError:
+                pass  # Widget already destroyed
+            self._animation_id = None
+    
+    def destroy(self):
+        """Destroy the progress ring and clean up all resources."""
+        self._is_destroyed = True
+        self.stop_animation()
+        try:
+            self.canvas.destroy()
+        except tk.TclError:
+            pass  # Already destroyed
             self.draw()
     
     def draw(self):
@@ -357,14 +379,29 @@ class CyberProgressRing:
     
     def animate_indeterminate(self):
         """Animate indeterminate progress."""
-        if not self.is_indeterminate:
+        # Clear any existing animation callback
+        if self._animation_id:
+            self.canvas.after_cancel(self._animation_id)
+            self._animation_id = None
+            
+        if not self.is_indeterminate or self._is_destroyed:
             return
             
-        self.rotation = (self.rotation + 10) % 360
-        self.draw()
-        
-        # Schedule next frame
-        self.canvas.after(50, self.animate_indeterminate)
+        try:
+            # Check if canvas still exists
+            if not self.canvas.winfo_exists():
+                self._is_destroyed = True
+                return
+                
+            self.rotation = (self.rotation + 10) % 360
+            self.draw()
+            
+            # Schedule next frame with proper cleanup tracking
+            self._animation_id = self.canvas.after(50, self.animate_indeterminate)
+        except tk.TclError:
+            # Widget was destroyed
+            self._is_destroyed = True
+            self._animation_id = None
 
 
 class MatrixRain:
@@ -377,6 +414,8 @@ class MatrixRain:
         self.columns = width // 20
         self.drops = [0] * self.columns
         self.is_running = False
+        self._animation_id = None  # Track animation callbacks
+        self._is_destroyed = False  # Track widget destruction
         
         # Matrix characters
         self.chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()_+-=[]{}|;:,.<>?"
@@ -389,53 +428,86 @@ class MatrixRain:
     def stop(self):
         """Stop the matrix rain effect."""
         self.is_running = False
-        self.canvas.delete("matrix")
+        
+        # Cancel any pending animation callbacks
+        if self._animation_id:
+            try:
+                self.canvas.after_cancel(self._animation_id)
+            except tk.TclError:
+                pass  # Widget already destroyed
+            self._animation_id = None
+            
+        # Clean up matrix elements
+        try:
+            self.canvas.delete("matrix")
+        except tk.TclError:
+            pass  # Widget already destroyed
+    
+    def destroy(self):
+        """Destroy the matrix rain and clean up all resources."""
+        self._is_destroyed = True
+        self.stop()
     
     def animate(self):
         """Animate the matrix rain."""
-        if not self.is_running:
+        # Clear any existing animation callback
+        if self._animation_id:
+            self.canvas.after_cancel(self._animation_id)
+            self._animation_id = None
+            
+        if not self.is_running or self._is_destroyed:
             return
             
-        # Clear previous frame
-        self.canvas.delete("matrix")
-        
-        # Draw falling characters
-        for i in range(self.columns):
-            # Random character
-            char = random.choice(self.chars)
-            
-            # Position
-            x = i * 20
-            y = self.drops[i] * 20
-            
-            # Color based on position (fade effect)
-            if y < self.height:
-                alpha = max(0.1, 1.0 - (y / self.height))
+        try:
+            # Check if canvas still exists
+            if not self.canvas.winfo_exists():
+                self._is_destroyed = True
+                return
                 
-                if alpha > 0.7:
-                    color = "#FFFFFF"
-                elif alpha > 0.4:
-                    color = "#CCCCCC"
+            # Clear previous frame
+            self.canvas.delete("matrix")
+            
+            # Draw falling characters
+            for i in range(self.columns):
+                # Random character
+                char = random.choice(self.chars)
+                
+                # Position
+                x = i * 20
+                y = self.drops[i] * 20
+                
+                # Color based on position (fade effect)
+                if y < self.height:
+                    alpha = max(0.1, 1.0 - (y / self.height))
+                    
+                    if alpha > 0.7:
+                        color = "#FFFFFF"
+                    elif alpha > 0.4:
+                        color = "#CCCCCC"
+                    else:
+                        color = "#666666"
+                    
+                    # Draw character
+                    self.canvas.create_text(
+                        x, y,
+                        text=char,
+                        fill=color,
+                        font=("Courier", 12, "bold"),
+                        tags="matrix"
+                    )
+                
+                # Update drop position
+                if y > self.height and random.random() > 0.975:
+                    self.drops[i] = 0
                 else:
-                    color = "#666666"
-                
-                # Draw character
-                self.canvas.create_text(
-                    x, y,
-                    text=char,
-                    fill=color,
-                    font=("Courier", 12, "bold"),
-                    tags="matrix"
-                )
+                    self.drops[i] += 1
             
-            # Update drop position
-            if y > self.height and random.random() > 0.975:
-                self.drops[i] = 0
-            else:
-                self.drops[i] += 1
-        
-        # Schedule next frame
-        self.canvas.after(100, self.animate)
+            # Schedule next frame with proper cleanup tracking
+            self._animation_id = self.canvas.after(100, self.animate)
+        except tk.TclError:
+            # Widget was destroyed
+            self._is_destroyed = True
+            self._animation_id = None
 
 
 class CyberEnhancedWidget:

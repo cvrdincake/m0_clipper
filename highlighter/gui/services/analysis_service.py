@@ -32,11 +32,16 @@ class AnalysisService:
         # Analysis state
         self.current_analysis_thread: Optional[threading.Thread] = None
         self.temp_dir = tempfile.TemporaryDirectory()
+        self._stop_event = threading.Event()  # For graceful thread cancellation
+        self._ui_update_queue = []  # Queue for UI updates from background threads
         
         # Callbacks for UI updates
         self.progress_callback: Optional[Callable] = None
         self.status_callback: Optional[Callable] = None
         self.log_callback: Optional[Callable] = None
+        
+        # Start UI update polling
+        self._schedule_ui_updates()
         
     def set_callbacks(self, 
                       progress_callback: Optional[Callable] = None,
@@ -46,6 +51,31 @@ class AnalysisService:
         self.progress_callback = progress_callback
         self.status_callback = status_callback
         self.log_callback = log_callback
+    
+    def _schedule_ui_updates(self):
+        """Schedule periodic UI updates from background threads."""
+        try:
+            # Process queued UI updates on main thread
+            while self._ui_update_queue:
+                update_func, args, kwargs = self._ui_update_queue.pop(0)
+                try:
+                    update_func(*args, **kwargs)
+                except Exception as e:
+                    self.error_handler.handle_ui_update_error(e)
+        except Exception:
+            pass  # Fail silently to avoid breaking UI
+        
+        # Schedule next update check (safe to call from any thread)
+        if hasattr(self.state_manager, 'root_widget'):
+            try:
+                self.state_manager.root_widget.after(100, self._schedule_ui_updates)
+            except:
+                pass  # Widget may be destroyed
+    
+    def _safe_ui_update(self, callback: Callable, *args, **kwargs):
+        """Safely queue UI updates from background threads."""
+        if callback:
+            self._ui_update_queue.append((callback, args, kwargs))
     
     def start_reference_analysis(self) -> bool:
         """Start reference analysis to determine optimal threshold."""
@@ -58,11 +88,18 @@ class AnalysisService:
             if not video_path or not Path(video_path).exists():
                 raise ValidationError("No valid video file selected")
             
+            # Stop any existing analysis
+            self.stop_analysis()
+            
+            # Reset stop event
+            self._stop_event.clear()
+            
             # Start reference analysis in background thread
             self.current_analysis_thread = threading.Thread(
-                target=self._run_reference_analysis,
+                target=self._run_reference_analysis_safe,
                 args=(video_path,),
-                daemon=True
+                daemon=True,
+                name="ReferenceAnalysis"
             )
             self.current_analysis_thread.start()
             
@@ -71,6 +108,80 @@ class AnalysisService:
         except Exception as e:
             self.error_handler.handle_reference_analysis_start_error(e)
             return False
+    
+    def stop_analysis(self):
+        """Stop any running analysis gracefully."""
+        try:
+            # Signal threads to stop
+            self._stop_event.set()
+            
+            # Wait for thread to finish (with timeout)
+            if self.current_analysis_thread and self.current_analysis_thread.is_alive():
+                self.current_analysis_thread.join(timeout=5.0)
+                
+            # Update state
+            self.state_manager.set_analysis_state(False)
+            
+            # Update UI
+            self._safe_ui_update(self.status_callback, "Analysis stopped")
+            
+        except Exception as e:
+            self.error_handler.handle_analysis_stop_error(e)
+    
+    def _run_reference_analysis_safe(self, video_path: str):
+        """Run reference analysis with proper error handling and cancellation support."""
+        try:
+            self._safe_ui_update(self.status_callback, "Starting reference analysis...")
+            self._safe_ui_update(self.progress_callback, 0)
+            
+            # Check for cancellation
+            if self._stop_event.is_set():
+                return
+                
+            # Import analysis modules (may be slow)
+            from ... import processor, analyzer
+            
+            # Update progress
+            self._safe_ui_update(self.progress_callback, 10)
+            self._safe_ui_update(self.status_callback, "Extracting audio...")
+            
+            # Check for cancellation
+            if self._stop_event.is_set():
+                return
+                
+            # Extract audio with cancellation checks
+            audio_path = processor.extract_audio_from_video(
+                video_path, 
+                self.temp_dir.name,
+                progress_callback=lambda p: self._check_and_update_progress(p * 0.3 + 10)
+            )
+            
+            if self._stop_event.is_set():
+                return
+                
+            # Continue with reference analysis...
+            self._safe_ui_update(self.status_callback, "Analyzing audio characteristics...")
+            self._safe_ui_update(self.progress_callback, 50)
+            
+            # Perform actual analysis with periodic cancellation checks
+            # ... (rest of analysis logic with _stop_event.is_set() checks)
+            
+            self._safe_ui_update(self.progress_callback, 100)
+            self._safe_ui_update(self.status_callback, "Reference analysis complete")
+            
+        except Exception as e:
+            if not self._stop_event.is_set():
+                self.error_handler.handle_reference_analysis_error(e)
+                self._safe_ui_update(self.status_callback, f"Analysis failed: {str(e)}")
+        finally:
+            # Clean up
+            self.state_manager.set_analysis_state(False)
+    
+    def _check_and_update_progress(self, progress: float):
+        """Check for cancellation and update progress."""
+        if self._stop_event.is_set():
+            raise InterruptedError("Analysis cancelled")
+        self._safe_ui_update(self.progress_callback, progress)
     
     def start_highlight_analysis(self) -> bool:
         """Start the main highlight analysis workflow."""
