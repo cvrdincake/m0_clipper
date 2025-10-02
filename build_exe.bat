@@ -26,6 +26,10 @@ if exist "dist\M0_Clipper.exe" (
     
     REM Create portable distribution
     mkdir "dist\M0_Clipper_Portable" 2>nul
+    
+    REM Add a small delay to ensure the file is ready
+    timeout /t 2 /nobreak > nul
+    
     copy "dist\M0_Clipper.exe" "dist\M0_Clipper_Portable\"
     
     echo # M0 Clipper - Portable Version > "dist\M0_Clipper_Portable\README.txt"

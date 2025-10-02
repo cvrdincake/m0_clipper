@@ -1,11 +1,27 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
+import sys
+from pathlib import Path
+
 block_cipher = None
+
+# Find tbb libraries
+tbb_libs = []
+if sys.platform == "win32":
+    # Look for tbb libraries in the standard library path
+    for path in sys.path:
+        if "Lib" in path and "site-packages" in path:
+            tbb_path = Path(path) / "numba"
+            if tbb_path.exists():
+                for f in tbb_path.glob("tbb*.dll"):
+                    tbb_libs.append((str(f), "."))
+                break
 
 a = Analysis(
     ['launch_gui.py'],
     pathex=[],
-    binaries=[],
+    binaries=tbb_libs,
     datas=[
         ('highlighter', 'highlighter'),
     ],
