@@ -1,6 +1,27 @@
 @echo off
+setlocal enabledelayedexpansion
+
 echo M0 Clipper Build System for Windows
 echo =====================================
+
+REM Find tbb12.dll
+echo Searching for tbb12.dll...
+set "TBB_PATH="
+for /R "%LOCALAPPDATA%\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages" %%f in (tbb12.dll) do (
+    if exist "%%f" (
+        set "TBB_PATH=%%~dpf"
+        goto :found_tbb
+    )
+)
+
+:found_tbb
+if defined TBB_PATH (
+    echo Found tbb12.dll in !TBB_PATH!
+    set "PYINSTALLER_ARGS=--add-binary \"!TBB_PATH!tbb12.dll;.\" "
+) else (
+    echo WARNING: tbb12.dll not found. The build may fail.
+    set "PYINSTALLER_ARGS="
+)
 
 REM Check if PyInstaller is installed
 python -c "import PyInstaller; print('PyInstaller found:', PyInstaller.__version__)" 2>nul
@@ -16,40 +37,41 @@ if exist dist rmdir /s /q dist
 
 REM Build the executable
 echo Building M0 Clipper executable...
-python -m PyInstaller m0_clipper.spec --clean
+python -m PyInstaller m0_clipper.spec --clean %PYINSTALLER_ARGS%
 
 REM Check if build was successful
-if exist "dist\M0_Clipper.exe" (
-    echo.
-    echo ✅ Build completed successfully!
-    echo 📁 Executable created: dist\M0_Clipper.exe
-    
-    REM Create portable distribution
-    mkdir "dist\M0_Clipper_Portable" 2>nul
-    
-    REM Add a small delay to ensure the file is ready
-    timeout /t 2 /nobreak > nul
-    
-    copy "dist\M0_Clipper.exe" "dist\M0_Clipper_Portable\"
-    
-    echo # M0 Clipper - Portable Version > "dist\M0_Clipper_Portable\README.txt"
-    echo. >> "dist\M0_Clipper_Portable\README.txt"
-    echo ## Quick Start >> "dist\M0_Clipper_Portable\README.txt"
-    echo 1. Double-click M0_Clipper.exe to launch >> "dist\M0_Clipper_Portable\README.txt"
-    echo 2. Drag and drop your video file >> "dist\M0_Clipper_Portable\README.txt"
-    echo 3. Click "Generate Highlights" to start >> "dist\M0_Clipper_Portable\README.txt"
-    echo. >> "dist\M0_Clipper_Portable\README.txt"
-    echo ## Requirements >> "dist\M0_Clipper_Portable\README.txt"
-    echo - FFmpeg must be installed on your system >> "dist\M0_Clipper_Portable\README.txt"
-    echo - Windows 10/11 (64-bit) >> "dist\M0_Clipper_Portable\README.txt"
-    
-    echo 📦 Portable distribution created: dist\M0_Clipper_Portable\
-    echo.
-    echo 💡 Tip: Test the executable on a clean system to ensure all dependencies are included
-) else (
+if errorlevel 1 (
     echo.
     echo ❌ Build failed! Check the output above for errors.
-    echo Make sure all dependencies are installed and try again.
+    goto :end
 )
 
+echo.
+echo ✅ Build completed successfully!
+echo 📁 Executable created: dist\M0_Clipper.exe
+
+REM Create portable distribution
+echo 📦 Creating portable distribution...
+set "PORTABLE_DIR=dist\M0_Clipper_Portable"
+if exist "%PORTABLE_DIR%" rmdir /s /q "%PORTABLE_DIR%"
+mkdir "%PORTABLE_DIR%"
+
+copy "dist\M0_Clipper.exe" "%PORTABLE_DIR%\"
+
+echo # M0 Clipper - Portable Version > "%PORTABLE_DIR%\README.txt"
+echo. >> "%PORTABLE_DIR%\README.txt"
+echo ## Quick Start >> "%PORTABLE_DIR%\README.txt"
+echo 1. Double-click M0_Clipper.exe to launch >> "%PORTABLE_DIR%\README.txt"
+echo 2. Drag and drop your video file >> "%PORTABLE_DIR%\README.txt"
+echo 3. Click "Generate Highlights" to start >> "%PORTABLE_DIR%\README.txt"
+echo. >> "%PORTABLE_DIR%\README.txt"
+echo ## Requirements >> "%PORTABLE_DIR%\README.txt"
+echo - FFmpeg must be installed on your system >> "%PORTABLE_DIR%\README.txt"
+echo - Windows 10/11 (64-bit) >> "%PORTABLE_DIR%\README.txt"
+
+echo ✅ Portable distribution created: %PORTABLE_DIR%\
+echo.
+echo 💡 Tip: Test the executable on a clean system to ensure all dependencies are included
+
+:end
 pause
