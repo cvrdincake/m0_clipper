@@ -13,7 +13,7 @@ import sys
 
 # Import the new modular GUI system
 try:
-    from .gui import main as new_gui_main, MainApplication
+    from highlighter.gui import main as new_gui_main, MainApplication
     NEW_GUI_AVAILABLE = True
 except ImportError as e:
     NEW_GUI_AVAILABLE = False
@@ -40,7 +40,7 @@ def main():
     else:
         # Try to import and use legacy GUI as fallback
         try:
-            from . import gui_legacy
+            from highlighter import gui_legacy
             warnings.warn(
                 "Using legacy GUI fallback. The new modular architecture is recommended.",
                 UserWarning,
@@ -52,7 +52,7 @@ def main():
             print("ERROR: GUI system not available.")
             print(f"Modular GUI import error: {import_error}")
             print("\nPlease ensure all GUI components are properly installed.")
-            sys.exit(1)
+            raise RuntimeError("GUI system initialization failed. Please check your installation.")
 
 
 # Legacy class reference for backward compatibility
@@ -78,7 +78,7 @@ class ModernHighlighterGUI:
         else:
             # Fallback to legacy GUI
             try:
-                from . import gui_legacy
+                from highlighter import gui_legacy
                 self._legacy_app = gui_legacy.ModernHighlighterGUI()
             except ImportError:
                 raise ImportError("No GUI system available")

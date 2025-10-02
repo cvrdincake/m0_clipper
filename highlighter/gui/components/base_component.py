@@ -8,8 +8,8 @@ import tkinter as tk
 from abc import ABC, abstractmethod
 from typing import Optional, Any
 
-from ...core import ErrorHandler
-from ..state import StateManager
+from highlighter.core.error_handler import ErrorHandler
+from highlighter.gui.state.app_state import StateManager
 
 
 class BaseComponent(ABC):

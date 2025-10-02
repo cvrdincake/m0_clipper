@@ -17,7 +17,7 @@ except ImportError as e:
     print(f"Error: Required dependencies not found: {e}")
     print("Please install dependencies with: pip install -r requirements.txt")
     print("Or install the package: pip install -e .")
-    sys.exit(1)
+    raise ImportError(f"Cannot start GUI: {e}")
 except Exception as e:
     print(f"Error starting GUI: {e}")
-    sys.exit(1)
+    raise RuntimeError(f"GUI startup failed: {e}")

@@ -20,10 +20,10 @@ This design follows professional software engineering principles:
 """
 
 # Import core infrastructure
-from ..core import ErrorHandler, ValidationError, setup_logging
+from highlighter.core import ErrorHandler, ValidationError, setup_logging
 
 # Main GUI entry point
-from .main_window import MainApplication
+from highlighter.gui.main_window import MainApplication
 
 # Initialize logging for GUI package
 logger = setup_logging()

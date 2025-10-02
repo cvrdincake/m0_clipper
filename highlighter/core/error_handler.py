@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import uuid
 
-from .exceptions import (
+from highlighter.core.exceptions import (
     M0ClipperException, ErrorContext, ErrorSeverity, ErrorCategory,
     create_error_context
 )

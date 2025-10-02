@@ -17,9 +17,9 @@ try:
 except ImportError:
     DND_AVAILABLE = False
 
-from .base_component import BaseComponent
-from ...glassmorphism import GlassPanel
-from ...core import ValidationError
+from highlighter.gui.components.base_component import BaseComponent
+from highlighter.glassmorphism import GlassPanel
+from highlighter.core.exceptions import ValidationError
 
 
 class VideoInputComponent(BaseComponent):
@@ -249,7 +249,7 @@ class VideoInputComponent(BaseComponent):
     
     def setup_browse_button(self):
         """Set up the browse button."""
-        from ...glassmorphism import GlassButton
+        from highlighter.glassmorphism import GlassButton
         
         self.browse_btn = GlassButton(
             self.panel.content_frame,

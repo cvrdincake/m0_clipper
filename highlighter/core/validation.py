@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Union, List, Optional, Any, Dict
 from urllib.parse import urlparse
 
-from .exceptions import ValidationError, FileSystemError
+from highlighter.core.exceptions import ValidationError, FileSystemError
 
 
 class Validator:

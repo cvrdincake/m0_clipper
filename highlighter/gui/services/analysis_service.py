@@ -11,9 +11,10 @@ import time
 from typing import Optional, Dict, Any, Callable
 from pathlib import Path
 
-from ...core import ErrorHandler, AudioProcessingError, VideoProcessingError, ValidationError
-from ..state import StateManager
-from ... import processor, analyzer
+from highlighter.core.error_handler import ErrorHandler
+from highlighter.core.exceptions import AudioProcessingError, VideoProcessingError, ValidationError
+from highlighter.gui.state.app_state import StateManager
+from highlighter import processor, analyzer
 
 
 class AnalysisService:
@@ -139,7 +140,7 @@ class AnalysisService:
                 return
                 
             # Import analysis modules (may be slow)
-            from ... import processor, analyzer
+            from highlighter import processor, analyzer
             
             # Update progress
             self._safe_ui_update(self.progress_callback, 10)

@@ -5,11 +5,11 @@ Provides modular, reusable UI components following professional
 software engineering principles.
 """
 
-from .base_component import BaseComponent
-from .video_input import VideoInputComponent
-from .settings_panel import SettingsComponent
-from .control_panel import ControlComponent
-from .status_display import StatusComponent
+from highlighter.gui.components.base_component import BaseComponent
+from highlighter.gui.components.video_input import VideoInputComponent
+from highlighter.gui.components.settings_panel import SettingsComponent
+from highlighter.gui.components.control_panel import ControlComponent
+from highlighter.gui.components.status_display import StatusComponent
 
 __all__ = [
     "BaseComponent",

@@ -10,9 +10,9 @@ from tkinter import ttk
 from datetime import datetime
 from typing import List, Optional
 
-from .base_component import BaseComponent
-from ...glassmorphism import GlassPanel
-from ...core import ErrorHandler
+from highlighter.gui.components.base_component import BaseComponent
+from highlighter.glassmorphism import GlassPanel
+from highlighter.core.error_handler import ErrorHandler
 
 
 class StatusComponent(BaseComponent):

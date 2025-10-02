@@ -11,7 +11,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import os
 
-from ...core import ValidationError, ErrorHandler, PathValidator
+from highlighter.core.exceptions import ValidationError
+from highlighter.core.error_handler import ErrorHandler
+from highlighter.core.validation import PathValidator
 
 
 @dataclass

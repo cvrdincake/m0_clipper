@@ -8,9 +8,9 @@ Extracted from the monolithic GUI to improve maintainability and testability.
 import tkinter as tk
 from typing import Optional
 
-from .base_component import BaseComponent
-from ...glassmorphism import GlassButton
-from ...core import ValidationError
+from highlighter.gui.components.base_component import BaseComponent
+from highlighter.glassmorphism import GlassButton
+from highlighter.core.exceptions import ValidationError
 
 
 class ControlComponent(BaseComponent):

@@ -11,10 +11,36 @@ New development should use the modular components directly.
 
 import warnings
 import sys
+import tkinter as tk
+from tkinter import ttk, messagebox, filedialog
+import os
+import tempfile
+import threading
+from typing import Optional
+from rich.console import Console
+import pathlib
+from highlighter import processor, analyzer
+
+# Check for optional dependencies
+try:
+    from tkinterdnd2 import TkinterDnD, DND_FILES
+    DND_AVAILABLE = True
+except ImportError:
+    DND_AVAILABLE = False
+    DND_FILES = ""
+
+# Try to import glassmorphism components for legacy compatibility
+try:
+    from highlighter.glassmorphism import GlassmorphismTheme, GlassPanel, GlassButton, AnimationManager
+    from highlighter.window_effects import WindowEffects, GlassmorphismNotification
+    from highlighter.animations import show_boot_sequence, show_glitch_effect
+    GLASSMORPHISM_AVAILABLE = True
+except ImportError:
+    GLASSMORPHISM_AVAILABLE = False
 
 # Import the new modular GUI system
 try:
-    from .gui import main as new_gui_main
+    from highlighter.gui import main as new_gui_main
     NEW_GUI_AVAILABLE = True
 except ImportError as e:
     NEW_GUI_AVAILABLE = False
@@ -44,7 +70,7 @@ def main():
         print(f"Import error: {import_error}")
         print("\nThe monolithic GUI has been refactored into a modular architecture.")
         print("Please ensure all components are properly installed.")
-        sys.exit(1)
+        raise RuntimeError("Modular GUI system not available. Please check your installation.")
 
 
 # Legacy class reference for backward compatibility
@@ -65,7 +91,7 @@ class ModernHighlighterGUI:
         )
         
         if NEW_GUI_AVAILABLE:
-            from .gui import MainApplication
+            from highlighter.gui import MainApplication
             self._app = MainApplication()
         else:
             raise ImportError("New modular GUI system not available")
@@ -75,12 +101,14 @@ class ModernHighlighterGUI:
         return self._app.run()
 
 
-if __name__ == "__main__":
-    main()
-    """Professional glassmorphism GUI for M0 Clipper."""
+class LegacyModernHighlighterGUI:
+    """Legacy glassmorphism GUI implementation (DEPRECATED - use modular architecture)."""
     
-    # Ultra-modern Glassmorphism Theme
     def __init__(self):
+        # Check if glassmorphism components are available
+        if not GLASSMORPHISM_AVAILABLE:
+            raise ImportError("Legacy GUI glassmorphism dependencies not available")
+            
         # Initialize glassmorphism theme
         self.glass_theme = GlassmorphismTheme()
         self.colors = self.glass_theme.colors
@@ -154,11 +182,11 @@ if __name__ == "__main__":
         # Configure dark theme base
         self.style.theme_use('clam')
     
-    def create_glass_panel(self, parent, title: str = "", **kwargs) -> GlassPanel:
+    def create_glass_panel(self, parent, title: str = "", **kwargs) -> "GlassPanel":
         """Create a new glassmorphism panel."""
         return GlassPanel(parent, self.glass_theme, title, **kwargs)
     
-    def create_glass_button(self, parent, text: str = "", command=None, style: str = "primary", **kwargs) -> GlassButton:
+    def create_glass_button(self, parent, text: str = "", command=None, style: str = "primary", **kwargs) -> "GlassButton":
         """Create a new glassmorphism button."""
         return GlassButton(parent, self.glass_theme, text, command, style, **kwargs)
     
@@ -758,7 +786,7 @@ if __name__ == "__main__":
             row=1
         )
     
-    def create_glassmorphism_checkbox(self, parent, text: str, variable: tk.BooleanVar, row: int):
+    def create_glassmorphism_checkbox(self, parent, text: str, variable: "tk.BooleanVar", row: int):
         """Create a custom glassmorphism checkbox."""
         checkbox_frame = tk.Frame(parent, bg=self.colors.glass_primary)
         checkbox_frame.grid(row=row, column=0, sticky=tk.W, pady=(8, 0))
@@ -2027,8 +2055,14 @@ if __name__ == "__main__":
 
 def main():
     """Main entry point for the GUI application."""
-    app = ModernHighlighterGUI()
-    app.run()
+    # Try new modular GUI first, fallback to legacy if needed
+    try:
+        app = ModernHighlighterGUI()  # This redirects to new modular GUI
+        app.run()
+    except Exception:
+        # Ultimate fallback to legacy implementation
+        app = LegacyModernHighlighterGUI()
+        app.run()
 
 
 if __name__ == "__main__":

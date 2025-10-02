@@ -10,7 +10,7 @@ from tkinter import messagebox
 from typing import Optional, Dict, Any
 from enum import Enum
 
-from ...core import ErrorHandler
+from highlighter.core.error_handler import ErrorHandler
 
 
 class NotificationType(Enum):

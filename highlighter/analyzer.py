@@ -16,8 +16,8 @@ from rich.panel import Panel
 
 from loguru import logger
 
-from . import processor, common, console
-from .animations import CyberLoadingAnimation, create_clip_processing_animation
+from highlighter import processor, common, console
+from highlighter.animations import CyberLoadingAnimation, create_clip_processing_animation
 
 @dataclass
 class BatchJob:

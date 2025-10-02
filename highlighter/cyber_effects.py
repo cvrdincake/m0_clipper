@@ -320,7 +320,6 @@ class CyberProgressRing:
             self.canvas.destroy()
         except tk.TclError:
             pass  # Already destroyed
-            self.draw()
     
     def draw(self):
         """Draw the progress ring."""
@@ -614,23 +613,29 @@ class CyberBackground:
         """Start all background effects."""
         self.is_active = True
         
-        # Start matrix rain with low opacity
-        threading.Thread(
-            target=lambda: time.sleep(1) or self.matrix.start(),
-            daemon=True
-        ).start()
-        
-        # Start subtle particle effects
-        threading.Thread(
-            target=lambda: time.sleep(2) or self.particles.start(),
-            daemon=True
-        ).start()
+        # Start matrix rain with delay using after() method instead of threads
+        if hasattr(self.canvas, 'after'):
+            self.canvas.after(1000, self.matrix.start)  # 1 second delay
+            self.canvas.after(2000, self.particles.start)  # 2 second delay
+        else:
+            # Fallback for testing
+            self.matrix.start()
+            self.particles.start()
     
     def stop_effects(self):
         """Stop all background effects."""
         self.is_active = False
-        self.matrix.stop()
-        self.particles.stop()
+        if hasattr(self, 'matrix'):
+            self.matrix.stop()
+        if hasattr(self, 'particles'):
+            self.particles.stop()
+        
+        # Clean up canvas if needed
+        try:
+            if hasattr(self, 'canvas') and self.canvas.winfo_exists():
+                self.canvas.delete("all")
+        except tk.TclError:
+            pass  # Widget already destroyed
 
 
 # Example usage and integration functions

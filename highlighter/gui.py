@@ -19,11 +19,11 @@ except ImportError:
     DND_AVAILABLE = False
     print("Warning: tkinterdnd2 not available. Drag-and-drop functionality will be disabled.")
 
-from . import analyzer, processor
-from .common import similarity
-from .animations import show_boot_sequence, show_glitch_effect
-from .glassmorphism import GlassmorphismTheme, GlassPanel, GlassButton, AnimationManager
-from .window_effects import WindowEffects, GlassmorphismNotification
+from highlighter import analyzer, processor
+from highlighter.common import similarity
+from highlighter.animations import show_boot_sequence, show_glitch_effect
+from highlighter.glassmorphism import GlassmorphismTheme, GlassPanel, GlassButton, AnimationManager
+from highlighter.window_effects import WindowEffects, GlassmorphismNotification
 from rich.console import Console
 
 

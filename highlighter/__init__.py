@@ -14,7 +14,7 @@ from typing_extensions import Annotated
 console = Console()
 
 __all__ = ['processor', 'common', 'analyzer', 'gui', 'core']
-from . import processor, common, analyzer, gui, core
+from highlighter import processor, common, analyzer, gui, core
 
 DEFAULT_TEMP_DIR = tempfile.TemporaryDirectory()
 
@@ -32,7 +32,7 @@ def reference(
     
     if not video_as_path.exists():
         logger.error(f'file does not exist: {path_to_video}')
-        from .core.exceptions import FileSystemError
+        from highlighter.core.exceptions import FileSystemError
         raise FileSystemError(
             f"Video file does not exist: {path_to_video}",
             path=str(path_to_video),
@@ -98,12 +98,12 @@ def launch_gui():
     """Launch the graphical user interface."""
     try:
         # Use new modular GUI architecture
-        from .gui import main as gui_main
+        from highlighter.gui import main as gui_main
         gui_main()
     except ImportError as e:
         # Fallback to legacy GUI bridge
         try:
-            from . import gui_bridge
+            from highlighter import gui_bridge
             gui_bridge.main()
         except ImportError:
             console.print(f"[red]Error:[/] GUI dependencies not available: {e}")
@@ -130,7 +130,7 @@ def batch(
     try:
         video_files = glob.glob(videos_pattern)
     except (OSError, PermissionError) as e:
-        from .core.exceptions import FileSystemError
+        from highlighter.core.exceptions import FileSystemError
         raise FileSystemError(
             f"Cannot access files matching pattern: {videos_pattern}",
             path=videos_pattern,
@@ -144,7 +144,7 @@ def batch(
     
     if not video_files:
         console.print(f"[red]No video files found matching pattern: {videos_pattern}[/red]")
-        from .core.exceptions import FileSystemError
+        from highlighter.core.exceptions import FileSystemError
         raise FileSystemError(
             f"No video files found matching pattern: {videos_pattern}",
             path=videos_pattern,
@@ -213,7 +213,7 @@ def batch(
 def demo():
     """Show a demo of the futuristic loading animations."""
     try:
-        from .animations import show_boot_sequence, create_clip_processing_animation, show_glitch_effect
+        from highlighter.animations import show_boot_sequence, create_clip_processing_animation, show_glitch_effect
         
         console.print("[bold cyan]🎮 M0 Clipper: Cyber Animation Demo 🎮[/]")
         console.print()
@@ -282,7 +282,7 @@ def analyze(
             else:
                 files_in_video_path = []
         except (OSError, PermissionError) as e:
-            from .core.exceptions import FileSystemError
+            from highlighter.core.exceptions import FileSystemError
             raise FileSystemError(
                 f"Cannot access directory: {video_as_path.parent}",
                 path=str(video_as_path.parent),
@@ -308,7 +308,7 @@ def analyze(
                         break
                     else:
                         logger.critical('no related file found. exiting...')
-                        from .core.exceptions import FileSystemError
+                        from highlighter.core.exceptions import FileSystemError
                         raise FileSystemError(
                             "No suitable video file found after user interaction",
                             path=str(path_to_video),
@@ -319,7 +319,7 @@ def analyze(
                         )
         except Exception as e:
             if not isinstance(e, (FileSystemError, KeyboardInterrupt)):
-                from .core.exceptions import FileSystemError
+                from highlighter.core.exceptions import FileSystemError
                 raise FileSystemError(
                     f"Error during file similarity check: {str(e)}",
                     path=str(path_to_video),
@@ -336,7 +336,7 @@ def analyze(
             logger.info(f'Using related file: {related_file}')
             path_to_video = related_file
         else:
-            from .core.exceptions import FileSystemError
+            from highlighter.core.exceptions import FileSystemError
             raise FileSystemError(
                 f"Video file not found and no suitable alternative located: {path_to_video}",
                 path=str(path_to_video),
@@ -352,7 +352,7 @@ def analyze(
         try:
             output_as_path.mkdir(parents=True, exist_ok=True)
         except (OSError, PermissionError) as e:
-            from .core.exceptions import FileSystemError
+            from highlighter.core.exceptions import FileSystemError
             raise FileSystemError(
                 f"Cannot create output directory: {output_directory}",
                 path=str(output_as_path),
@@ -365,7 +365,7 @@ def analyze(
                 ]
             )
     elif not output_as_path.is_dir():
-        from .core.exceptions import FileSystemError
+        from highlighter.core.exceptions import FileSystemError
         raise FileSystemError(
             f"Output path exists but is not a directory: {output_directory}",
             path=str(output_as_path),

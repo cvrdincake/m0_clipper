@@ -17,16 +17,17 @@ try:
 except ImportError:
     DND_AVAILABLE = False
 
-from ..glassmorphism import GlassmorphismTheme, AnimationManager
-from ..window_effects import WindowEffects, GlassmorphismNotification
-from ..core import ErrorHandler, setup_logging
-from .state import get_state_manager, StateManager
-from .components.video_input import VideoInputComponent
-from .components.settings_panel import SettingsComponent  
-from .components.control_panel import ControlComponent
-from .components.status_display import StatusComponent
-from .services.analysis_service import AnalysisService
-from .services.notification_service import NotificationService
+from highlighter.glassmorphism import GlassmorphismTheme, AnimationManager
+from highlighter.window_effects import WindowEffects, GlassmorphismNotification
+from highlighter.core.error_handler import ErrorHandler
+from highlighter.core.logging_config import setup_logging
+from highlighter.gui.state.app_state import get_state_manager, StateManager
+from highlighter.gui.components.video_input import VideoInputComponent
+from highlighter.gui.components.settings_panel import SettingsComponent  
+from highlighter.gui.components.control_panel import ControlComponent
+from highlighter.gui.components.status_display import StatusComponent
+from highlighter.gui.services.analysis_service import AnalysisService
+from highlighter.gui.services.notification_service import NotificationService
 
 
 class MainApplication:

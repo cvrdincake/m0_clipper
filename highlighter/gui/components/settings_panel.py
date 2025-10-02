@@ -9,9 +9,9 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Optional
 
-from .base_component import BaseComponent
-from ...glassmorphism import GlassPanel, GlassButton
-from ...core import ValidationError
+from highlighter.gui.components.base_component import BaseComponent
+from highlighter.glassmorphism import GlassPanel, GlassButton
+from highlighter.core.exceptions import ValidationError
 
 
 class SettingsComponent(BaseComponent):
